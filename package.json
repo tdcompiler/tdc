@@ -1,10 +1,11 @@
 {
-	"name": "ourdcompiler",
+	"name": "OurDCompiler",
 	"description": "An example project skeleton",
-	"homepage": "http://example.org",
+	"homepage": "http://github.com/bakkegaard/OurDCompiler",
 	"copyright": "Copyright © 2000, Your Name",
 	"authors": [
-		"Your Name"
+		"Nick Bakkegaard",
+		"Casper Faergemand"
 	],
 	"dependencies": {
 		"pegged": "~master"
