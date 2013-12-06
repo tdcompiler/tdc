@@ -40,9 +40,10 @@ Exp < Arithmetic
 Arithmetic < Factor (Addition / Subtraction)*
 Addition < "+" Factor
 Subtraction < "-" Factor
-Factor < Primary (Multiplication / Division)*
+Factor < Primary (Multiplication / Division / Modulo)*
 Multiplication < "*" Primary
 Division < "/" Primary
+Modulo < "%" Primary
 Primary < Parens / Negative / Positive / Number
 Parens < "(" Arithmetic ")"
 Negative < "-" Primary
