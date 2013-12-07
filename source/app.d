@@ -3,10 +3,10 @@ import std.stdio, std.file, pegged.grammar;
 void main(string[] args) {
 	mixin(grammar(dGrammar));
 	foreach (string name; dirEntries("../tests", "*.d", SpanMode.depth)) {
-		auto s = readText(name);
-		auto r = D(s);
-		writeln(s);
-		writeln(r);
+		auto file = readText(name);
+		auto tree = D(file);
+		writeln(file);
+		writeln(tree);
 		//writeln(r.successful);
 	}
 }
@@ -51,10 +51,4 @@ Positive < "+" Primary
 Number < Integer
 
 Integer < digit (digit / "_")*
-
-# Function < Identifier qualifiedIdentifier "(" ")" "{" Stms "}"
-
-#Identifier < Keyword 
-
-#Keyword < "int" / "return"
 `;
