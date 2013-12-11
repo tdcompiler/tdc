@@ -14,11 +14,11 @@ void main(string[] args) {
 enum dGrammar = `
 D:
 
-Module <- ModuleDecl? Stms?
+Module <- ModuleDecl? Stms
 
 ModuleDecl < "module" qualifiedIdentifier ";"
 
-Stms < Stm+
+Stms < Stm*
 
 Stm < qualifiedIdentifier qualifiedIdentifier ";"
 	/ "{" Stms "}"
@@ -28,9 +28,9 @@ Stm < qualifiedIdentifier qualifiedIdentifier ";"
 
 Function < Type Name "(" ")" FunctionBody
 
-Type < "int"
+Type < qualifiedIdentifier
 
-Name < "main"
+Name < qualifiedIdentifier
 
 FunctionBody < "{" Stms "}"
 
