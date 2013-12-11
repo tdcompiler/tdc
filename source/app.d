@@ -24,6 +24,7 @@ Stm < qualifiedIdentifier qualifiedIdentifier ";"
 	/ "{" Stms "}"
 	/ Function
 	/ ReturnStm
+	/ Comment
 
 Function < Type Name "(" ")" FunctionBody
 
@@ -50,5 +51,14 @@ Negative < "-" Primary
 Positive < "+" Primary
 Number < Integer
 
-Integer < digit (digit / "_")*
+Comment <: BlockComment # <: discards nodes. Replace with < to see nodes in tree
+	/ LineComment
+	/ NestingBlockComment
+
+BlockComment <~ :"/*" (!"*/" .)* :"*/"
+LineComment <~ :"//" (!eol .)* :eol
+NestingBlockComment <~ :"/+" (NestingBlockComment / (!("+/" / "/+") .))* :"+/"
+
+Integer < [1-9] (digit / "_")*
+	/ "0"
 `;
