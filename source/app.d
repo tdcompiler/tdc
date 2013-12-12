@@ -49,7 +49,7 @@ Primary < Parens / Negative / Positive / Number
 Parens < "(" Arithmetic ")"
 Negative < "-" Primary
 Positive < "+" Primary
-Number < Integer
+Number < IntegerLiteral
 
 Comment <: BlockComment # <: discards nodes. Replace with < to see nodes in tree
 	/ LineComment
@@ -59,6 +59,17 @@ BlockComment <~ :"/*" (!"*/" .)* :"*/"
 LineComment <~ :"//" (!eol .)* :eol
 NestingBlockComment <~ :"/+" (NestingBlockComment / (!("+/" / "/+") .))* :"+/"
 
-Integer < [1-9] (digit / "_")*
-	/ "0"
+IntegerLiteral <- DecimalInteger
+
+DecimalInteger < Integer IntegerSuffix?
+
+IntegerSuffix <- "L" / "u" / "U" / "Lu" / "LU" / "uL" / "UL"
+
+Integer <- Digit ( Digit / "_" )*
+
+Digit < Zero / NonZeroDigit
+
+Zero <- "0"
+
+NonZeroDigit <- [1-9]
 `;
