@@ -5,9 +5,9 @@ void main(string[] args) {
 	foreach (string name; dirEntries("../tests", "*.d", SpanMode.depth)) {
 		auto file = readText(name);
 		auto tree = D(file);
-		writeln(file);
-		writeln(tree);
-		//writeln(r.successful);
+		//writeln(file);
+		//writeln(tree);
+		writeln(name," ",tree.successful);
 	}
 }
 
