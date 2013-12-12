@@ -5,7 +5,7 @@
 	"copyright": "Copyright © 2000, Your Name",
 	"authors": [
 		"Nick Bakkegaard",
-		"Casper Faergemand"
+		"Casper Færgemand"
 	],
 	"dependencies": {
 		"pegged": "~master"
