@@ -65,7 +65,8 @@ DecimalInteger < Integer IntegerSuffix?
 
 IntegerSuffix <- "L" / "u" / "U" / "Lu" / "LU" / "uL" / "UL"
 
-Integer <- Digit ( Digit / "_" )*
+Integer <- NonZeroDigit ( Digit / "_" )*
+	/ Zero
 
 Digit < Zero / NonZeroDigit
 
