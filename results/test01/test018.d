@@ -1,0 +1,7 @@
+D [0, 36]["void", "main"]
+ +-D.Module [0, 36]["void", "main"]
+    +-D.Stms [0, 36]["void", "main"]
+       +-D.Stm [18, 36]["void", "main"]
+          +-D.Function [18, 36]["void", "main"]
+             +-D.Type [18, 23]["void"]
+             +-D.Name [23, 27]["main"]
