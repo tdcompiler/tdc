@@ -68,7 +68,8 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	auto tree = D(file);
 	auto treeText = tree.toString;
 	if (!tree.successful) {
-		errors ~= file ~ "\n" ~ treeText ~ "\n" ~ tree.failMsg ~ "\n";
+		errors ~= name ~ "\n" ~ file ~ "\n" ~ treeText ~ "\n"
+				~ tree.failMsg ~ "\n";
 		//writeln(file);
 		//writeln(treeText);
 		//writeln(tree.failMsg);
@@ -217,18 +218,18 @@ LeadingDecimal <- DecimalInteger
 
 IntegerLiteral <- Integer IntegerSuffix?
 
-Integer <~ DecimalInteger
-	/ BinaryInteger
+Integer < BinaryInteger
+	/ DecimalInteger
 	/ HexadecimalInteger
 
-IntegerSuffix <- "L" / "u" / "U" / "Lu" / "LU" / "uL" / "UL"
+IntegerSuffix <- "Lu" / "LU" / "uL" / "UL" / "L" / "U" / "u"
 
-DecimalInteger <- "0"
+DecimalInteger <~ "0"
 	/ NonZeroDigit DecimalDigitsUS?
 
-BinaryInteger <- BinPrefix BinaryDigits
+BinaryInteger <~ BinPrefix BinaryDigits
 
-BinPrefix <- "0b" / "0B"
+BinPrefix <: "0b" / "0B"
 
 HexadecimalInteger < HexPrefix HexDigitsNoSingleUS
 
@@ -249,7 +250,7 @@ DecimalDigitUS <- DecimalDigit / :"_"
 
 BinaryDigitsUS <- BinaryDigitUS+
 
-BinaryDigits <- BinaryDigit+
+BinaryDigits <- BinaryDigitsUS
 
 BinaryDigit <- [0-1]
 
@@ -257,7 +258,7 @@ BinaryDigitUS <- BinaryDigit / :"_"
 
 OctalDigits <- OctalDigit+
 
-OctalDigitsUS <- OctalDigit+
+OctalDigitsUS <- OctalDigitUS+
 
 OctalDigit <- [0-7]
 

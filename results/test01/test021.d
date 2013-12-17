@@ -1,3 +1,19 @@
-D (failure)
- +-D.Module (failure)
-    +-eoi failure at line 0, col 0, expected end of input, but got "int main()"
+D [0, 54]["int", "main", "return", "0", "Lu"]
+ +-D.Module [0, 54]["int", "main", "return", "0", "Lu"]
+    +-D.Stms [0, 54]["int", "main", "return", "0", "Lu"]
+       +-D.Stm [27, 54]["int", "main", "return", "0", "Lu"]
+          +-D.Function [27, 54]["int", "main", "return", "0", "Lu"]
+             +-D.Type [27, 31]["int"]
+             +-D.Name [31, 35]["main"]
+             +-D.FunctionBody [37, 54]["return", "0", "Lu"]
+                +-D.Stms [40, 52]["return", "0", "Lu"]
+                   +-D.Stm [40, 52]["return", "0", "Lu"]
+                      +-D.ReturnStm [40, 52]["return", "0", "Lu"]
+                         +-D.Exp [47, 50]["0", "Lu"]
+                            +-D.Factor [47, 50]["0", "Lu"]
+                               +-D.Primary [47, 50]["0", "Lu"]
+                                  +-D.Number [47, 50]["0", "Lu"]
+                                     +-D.IntegerLiteral [47, 50]["0", "Lu"]
+                                        +-D.Integer [47, 48]["0"]
+                                        |  +-D.DecimalInteger [47, 48]["0"]
+                                        +-D.IntegerSuffix [48, 50]["Lu"]

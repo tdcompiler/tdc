@@ -1,5 +1,18 @@
-D (failure)
- +-D.Module (failure)
-    +-eoi failure at line 2, col 0, after "l binary
-
-" expected end of input, but got "int main()"
+D [0, 56]["int", "main", "return", "00"]
+ +-D.Module [0, 56]["int", "main", "return", "00"]
+    +-D.Stms [0, 56]["int", "main", "return", "00"]
+       +-D.Stm [27, 56]["int", "main", "return", "00"]
+          +-D.Function [27, 56]["int", "main", "return", "00"]
+             +-D.Type [27, 31]["int"]
+             +-D.Name [31, 35]["main"]
+             +-D.FunctionBody [37, 56]["return", "00"]
+                +-D.Stms [40, 54]["return", "00"]
+                   +-D.Stm [40, 54]["return", "00"]
+                      +-D.ReturnStm [40, 54]["return", "00"]
+                         +-D.Exp [47, 52]["00"]
+                            +-D.Factor [47, 52]["00"]
+                               +-D.Primary [47, 52]["00"]
+                                  +-D.Number [47, 52]["00"]
+                                     +-D.IntegerLiteral [47, 52]["00"]
+                                        +-D.Integer [47, 52]["00"]
+                                           +-D.BinaryInteger [47, 52]["00"]

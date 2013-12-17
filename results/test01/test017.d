@@ -19,3 +19,4 @@ D [0, 77]["int", "main", "int", "i", "long", "l", "char", "c", "byte", "b", "ret
                                   +-D.Number [72, 73]["0"]
                                      +-D.IntegerLiteral [72, 73]["0"]
                                         +-D.Integer [72, 73]["0"]
+                                           +-D.DecimalInteger [72, 73]["0"]
