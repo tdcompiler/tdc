@@ -195,7 +195,7 @@ HexFloat <- HexPrefix HexDigitsNoSingleUS "." HexDigitsNoSingleUS HexExponent
 	/ HexPrefix "." HexDigitsNoSingleUS HexExponent
 	/ HexPrefix HexDigitsNoSingleUS HexExponent
 
-HexPrefix <- "0x" / "0X"
+HexPrefix <: "0x" / "0X"
 
 HexExponent <- HexExponentStart DecimalDigitsNoSingleUS
 
@@ -219,8 +219,8 @@ LeadingDecimal <- DecimalInteger
 IntegerLiteral <- Integer IntegerSuffix?
 
 Integer < BinaryInteger
-	/ DecimalInteger
 	/ HexadecimalInteger
+	/ DecimalInteger
 
 IntegerSuffix <- "Lu" / "LU" / "uL" / "UL" / "L" / "U" / "u"
 
@@ -231,7 +231,7 @@ BinaryInteger <~ BinPrefix BinaryDigits
 
 BinPrefix <: "0b" / "0B"
 
-HexadecimalInteger < HexPrefix HexDigitsNoSingleUS
+HexadecimalInteger <~ HexPrefix HexDigitsNoSingleUS
 
 NonZeroDigit <- [1-9]
 
