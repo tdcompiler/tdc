@@ -1,5 +1,3 @@
-// floating point
-
-void main() {
-	float f = 1.0;
+int main(){
+	return 0b0;
 }
