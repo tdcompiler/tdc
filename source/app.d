@@ -42,7 +42,10 @@ void parse(string name, bool forceOutput = false) {
 	 * The target file is read and parsed.
 	 */
 	auto file = readText(name);
+	file = file.replaceAll!(a => "\n")(regex("\r\n"));
 	auto tree = D(file);
+	writeln(tree.successful);
+	writeln(tree.failMsg);
 	auto treeText = tree.toString;
 
 	if (resultPath.exists) {
@@ -93,20 +96,20 @@ void parse(string name, bool forceOutput = false) {
 enum dGrammar = `
 D:
 
-Module <- ModuleDecl? Stms
+Module <- ModuleDecl? Stms eoi
 
-ModuleDecl < "module" qualifiedIdentifier ";"
+ModuleDecl < :"module" qualifiedIdentifier :";" #TODO Needs testing
 
 Stms < Stm*
 
 Stm < qualifiedIdentifier qualifiedIdentifier :";"
-	/ "{" Stms "}"
+	/ :"{" Stms :"}" #TODO Needs testing
 	/ Function
 	/ ReturnStm
 	/ Comment
 	/ Assignment
 
-Assignment < qualifiedIdentifier qualifiedIdentifier "=" Exp ";"
+Assignment < qualifiedIdentifier qualifiedIdentifier :"=" Exp :";"
 
 Function < Type Name :"(" :")" FunctionBody
 
