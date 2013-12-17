@@ -10,18 +10,40 @@ enum testDir = "../tests";
 enum resultDir = "../results";
 
 void main(string[] args) {
+	auto success = 0;
+	auto failed = 0;
+	string[] errors = [];
 	if (args.length == 1) {
 		foreach (string name; dirEntries(testDir, "*.d", SpanMode.depth)) {
-			parse(name);
+			if (parse(name, errors)) success++;
+			else failed++;
 		}
+		writeln;
+		writeln("Successful testcases:\t", success);
+		writeln("Failed testcases:\t", failed);
+		writeln;
 	} else {
 		foreach (string name; args[1 .. $]) {
-			parse(testDir ~ "/" ~ name, true);
+			parse(testDir ~ "/" ~ name, errors, true);
+		}
+	}
+	foreach (i, e; errors) {
+		write("View error ", i + 1, " - Yes, No, All yes, Quit: ");
+		char reply;
+		scanf("%s", &reply);
+		if (reply == 'y') {
+			e.writeln;
+		} else if (reply == 'q') {
+			return;
+		} else if (reply == 'a') {
+			foreach (e2; errors[i .. $])
+				e2.writeln;
+			return;
 		}
 	}
 }
 
-void parse(string name, bool forceOutput = false) {
+auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	mixin(grammar(dGrammar));
 
 	/*
@@ -42,11 +64,15 @@ void parse(string name, bool forceOutput = false) {
 	 * The target file is read and parsed.
 	 */
 	auto file = readText(name);
-	file = file.replaceAll!(a => "\n")(regex("\r\n"));
+	file = file.replaceAll!(a => "\n")(regex(r"\r\n"));
 	auto tree = D(file);
-	writeln(tree.successful);
-	writeln(tree.failMsg);
 	auto treeText = tree.toString;
+	if (!tree.successful) {
+		errors ~= file ~ "\n" ~ treeText ~ "\n" ~ tree.failMsg ~ "\n";
+		//writeln(file);
+		//writeln(treeText);
+		//writeln(tree.failMsg);
+	}
 
 	if (resultPath.exists) {
 		/*
@@ -62,7 +88,7 @@ void parse(string name, bool forceOutput = false) {
 				writeln("Previous result identical to current result:");
 				writeln(treeText);
 			}
-			return;
+			return tree.successful;
 		}
 		writeln(name);
 		writeln(file);
@@ -91,6 +117,7 @@ void parse(string name, bool forceOutput = false) {
 		writeln(tree);
 		resultPath.writeFile(treeText);
 	}
+	return tree.successful;
 }
 
 enum dGrammar = `
