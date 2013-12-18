@@ -163,7 +163,7 @@ Primary < Parens / Negative / Positive / Number
 Parens < :"(" Arithmetic :")"
 Negative < :"-" Primary
 Positive < :"+" Primary
-Number < FloatLiteral / IntegerLiteral #/ CharacterLiteral
+Number < FloatLiteral / IntegerLiteral / CharacterLiteral
 
 # <: discards nodes. Replace with < to see nodes in tree
 Comment <: BlockComment
@@ -225,10 +225,10 @@ StringPostfix < "c" / "w" / "d"
 
 #TokenString < "q{" Tokens "}"
 
-#CharacterLiteral < quote SingleQuotedCharacter quote
+CharacterLiteral < :quote SingleQuotedCharacter :quote
 
-#SingleQuotedCharacter < Character
-#	/ EscapeSequence
+SingleQuotedCharacter < EscapeSequence
+	/ (!quote Character)
 
 Character < .
 
