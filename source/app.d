@@ -162,7 +162,7 @@ Primary < Parens / Negative / Positive / Number
 Parens < "(" Arithmetic ")"
 Negative < :"-" Primary
 Positive < :"+" Primary
-Number < IntegerLiteral / FloatLiteral
+Number < FloatLiteral / IntegerLiteral
 
 # <: discards nodes. Replace with < to see nodes in tree
 Comment <: BlockComment
@@ -175,21 +175,21 @@ NestingBlockComment <~ :"/+" (NestingBlockComment / (!("+/" / "/+") .))* :"+/"
 
 FloatLiteral <- Float
 	/ Float Suffix
+	/ Integer FloatSuffix ImaginarySuffix?
 	/ Integer ImaginarySuffix
-	/ Integer FloatSuffix ImaginarySuffix
 	/ Integer RealSuffix ImaginarySuffix
 
 Float <- DecimalFloat
 	/ HexFloat
 
-DecimalFloat <- LeadingDecimal "." DecimalDigits?
+DecimalFloat <~ LeadingDecimal "." DecimalDigits?
 	/ DecimalDigits "." DecimalDigitsNoSingleUS DecimalExponent
 	/ "." DecimalInteger DecimalExponent?
 	/ LeadingDecimal DecimalExponent
 
 DecimalExponent <- DecimalExponentStart DecimalDigitsNoSingleUS
 
-DecimalExponentStart <- "e" / "E" / "e+" / "E+" / "e-" / "E-"
+DecimalExponentStart <- "e+" / "E+" / "e-" / "E-" / "e" / "E"
 
 HexFloat <- HexPrefix HexDigitsNoSingleUS "." HexDigitsNoSingleUS HexExponent
 	/ HexPrefix "." HexDigitsNoSingleUS HexExponent
@@ -199,7 +199,7 @@ HexPrefix <: "0x" / "0X"
 
 HexExponent <- HexExponentStart DecimalDigitsNoSingleUS
 
-HexExponentStart <- "p" / "P" / "p+" / "P+" / "p-" / "P-"
+HexExponentStart < "p+" / "P+" / "p-" / "P-" / "p" / "P"
 
 Suffix <- FloatSuffix
 	/ RealSuffix
@@ -239,7 +239,7 @@ DecimalDigits <- DecimalDigit+
 
 DecimalDigitsUS <~ DecimalDigitUS+
 
-DecimalDigitsNoSingleUS <- DecimalDigit DecimalDigitsUS?
+DecimalDigitsNoSingleUS <~ DecimalDigit DecimalDigitsUS?
 	/ DecimalDigitsUS DecimalDigit
 
 DecimalDigitNoStartingUS <- DecimalDigit DecimalDigitsUS?
@@ -270,7 +270,7 @@ HexDigitsUS <- HexDigitUS+
 
 HexDigitUS <- HexDigit / :"_"
 
-HexDigitsNoSingleUS <- HexDigit HexDigitsUS?
+HexDigitsNoSingleUS <~ HexDigit HexDigitsUS?
 	/ HexDigitsUS HexDigit
 
 HexDigit <- DecimalDigit
