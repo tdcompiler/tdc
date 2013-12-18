@@ -150,6 +150,7 @@ FunctionBody < :"{" Stms :"}"
 ReturnStm < "return" Exp? :";"
 
 Exp < Arithmetic
+	/ StringLiteral
 
 Arithmetic < Factor (Addition / Subtraction)*
 Addition < :"+" Factor
@@ -159,10 +160,10 @@ Multiplication < :"*" Primary
 Division < :"/" Primary
 Modulo < :"%" Primary
 Primary < Parens / Negative / Positive / Number
-Parens < "(" Arithmetic ")"
+Parens < :"(" Arithmetic :")"
 Negative < :"-" Primary
 Positive < :"+" Primary
-Number < FloatLiteral / IntegerLiteral
+Number < FloatLiteral / IntegerLiteral #/ CharacterLiteral
 
 # <: discards nodes. Replace with < to see nodes in tree
 Comment <: BlockComment
@@ -172,6 +173,64 @@ Comment <: BlockComment
 BlockComment <~ :"/*" (!"*/" .)* :"*/"
 LineComment <~ :"//" (!eol .)* :eol
 NestingBlockComment <~ :"/+" (NestingBlockComment / (!("+/" / "/+") .))* :"+/"
+
+StringLiteral < DoubleQuotedString
+
+#StringLiteral < WysiqygString
+#	/ AlternateWysiwygString
+#	/ DoubleQuotedString
+#	/ HexString
+#	/ DelimitedString
+#	/ TokenString
+
+#WysiqygString < "r\"" WysiwygCharacters doublequote StringPostfix?
+
+#AlternateWysiwygString < backquote WysiwygCharacters backquote StringPostfix?
+
+#WysiwygCharacters < WysiwygCharacter+
+
+#WysiwygCharacter < Character
+#	/ eol
+
+DoubleQuotedString < :doublequote "" :doublequote StringPostfix?
+	/ :doublequote DoubleQuotedCharacters :doublequote StringPostfix?
+
+DoubleQuotedCharacters <~ DoubleQuotedCharacter*
+
+DoubleQuotedCharacter < (!doublequote Character)
+	/ EscapeSequence
+	/ eol
+
+EscapeSequence < "\\'" #/ "\\\"" / "\\?" / "\\0" / "\\a" / "\\b"
+	/ "\\f" / "\\n" / "\\r" / "\\t" / "\\v"
+	/ "\\x" HexDigit HexDigit
+	/ backslash OctalDigit
+	/ backslash OctalDigit OctalDigit
+	/ backslash OctalDigit OctalDigit OctalDigit
+	/ "\\u" HexDigit HexDigit HexDigit HexDigit
+	/ "\\U" HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit
+#	/ backslash NamedCharacterEntity
+
+#HexString < "x\"" HexStringChars doublequote StringPostfix?
+
+#HexStringChars < HexStringChar+
+
+#HexStringChar < HexDigit
+#	/ WhiteSpace
+#	/ eol
+
+StringPostfix < "c" / "w" / "d"
+
+#DelimitedString < "q\"" Delimiter WysiwygCharacters Delimiter doublequote
+
+#TokenString < "q{" Tokens "}"
+
+#CharacterLiteral < quote SingleQuotedCharacter quote
+
+#SingleQuotedCharacter < Character
+#	/ EscapeSequence
+
+Character < .
 
 FloatLiteral <- Float
 	/ Float Suffix
