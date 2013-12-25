@@ -9,6 +9,8 @@ alias std.file.write writeFile;
 enum testDir = "../tests";
 enum resultDir = "../results";
 
+private bool overwriteAllPassing = false;
+
 void main(string[] args) {
 	auto success = 0;
 	auto failed = 0;
@@ -45,6 +47,7 @@ void main(string[] args) {
 
 auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	mixin(grammar(dGrammar));
+	//mixin(grammar(Dgrammar));
 
 	/*
 	 * Replaces \ with / in path to give to unite Unix and Windows
@@ -81,6 +84,9 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 		 * If they are different, both are printed, and the user must
 		 * decide which result to keep.
 		 */
+		if (!tree.successful) {
+			return tree.successful;
+		}
 		auto previousFile = readText(resultPath);
 		if (tree.toString == previousFile) {
 			if (forceOutput) {
@@ -91,17 +97,25 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 			}
 			return tree.successful;
 		}
+		if (overwriteAllPassing) {
+			resultPath.writeFile(treeText);
+			return tree.successful;
+		}
 		writeln(name);
 		writeln(file);
 		writeln("Previous result:");
 		writeln(previousFile);
 		writeln("Current result:");
 		writeln(tree);
-		write("Overwrite? (y/n): ");
+		write("Overwrite - Yes, No, All yes: ");
 		char reply;
 		scanf("%s", &reply);
 		if (reply == 'y') {
 			writeln("Overwriting old file.");
+			resultPath.writeFile(treeText);
+		} else if (reply == 'a') {
+			overwriteAllPassing = true;
+			writeln("Overwriting all old files.");
 			resultPath.writeFile(treeText);
 		} else {
 			writeln("Preserving old file.");
@@ -124,48 +138,168 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 enum dGrammar = `
 D:
 
-Module <- ModuleDecl? Stms eoi
+Module < DeclDefs eoi
 
-ModuleDecl < :"module" qualifiedIdentifier :";" #TODO Needs testing
+DeclDefs < DeclDef*
 
-Stms < Stm*
+DeclDef < Declaration
 
-Stm < qualifiedIdentifier qualifiedIdentifier :";"
-	/ :"{" Stms :"}" #TODO Needs testing
-	/ Function
-	/ ReturnStm
-	/ Comment
-	/ Assignment
+Declaration < Decl
 
-Assignment < qualifiedIdentifier qualifiedIdentifier :"=" Exp :";"
+Decl < BasicType Declarators :";"
+	/ BasicType Declarator FunctionBody
 
-Function < Type Name :"(" :")" FunctionBody
+BasicType < BasicTypeX
+	/ IdentifierList
 
-Type <- qualifiedIdentifier
+BasicTypeX < "bool" / "byte" / "ubyte" / "short" / "ushort" / "int"
+	/ "uint" / "long" / "ulong" / "char" / "wchar" / "dchar"
+	/ "float" / "double" / "real" / "ifloat" / "idouble" / "ireal"
+	/ "cfloat" / "cdouble" / "creal" / "void"
 
-Name < qualifiedIdentifier
+IdentifierList < Identifier
 
-FunctionBody < :"{" Stms :"}"
+Declarator < Identifier DeclaratorSuffixes?
 
-ReturnStm < "return" Exp? :";"
+DeclaratorSuffixes < DeclaratorSuffix+
 
-Exp < Arithmetic
+DeclaratorSuffix < Parameters
+
+Parameters < :"(" :")"
+	/ :"(" ParameterList :")"
+
+ParameterList < Parameter+
+	/ "..."
+
+Parameter < BasicType Declarator
+
+BasicType2 < "*"
+
+Declarators < DeclaratorInitializer
+
+DeclaratorInitializer < Declarator "=" Initializer
+	/ Declarator
+
+Initializer < NonVoidInitializer
+
+NonVoidInitializer < AssignExpression
+
+AssignExpression < ConditionalExpression
+
+ConditionalExpression < OrOrExpression
+
+OrOrExpression < AndAndExpression
+
+AndAndExpression < OrExpression
+
+OrExpression < XorExpression
+
+XorExpression < AndExpression
+
+AndExpression < ShiftExpression
+
+ShiftExpression < AddExpression
+
+AddExpression < MulExpression "+" AddExpression
+	/ MulExpression "-" AddExpression
+	/ MulExpression
+
+MulExpression < UnaryExpression "*" MulExpression
+	/ UnaryExpression "/" MulExpression
+	/ UnaryExpression "%" MulExpression
+	/ UnaryExpression
+
+UnaryExpression < "-" UnaryExpression
+	/ "+" UnaryExpression
+	/ PowExpression
+
+PowExpression < PostfixExpression
+
+PostfixExpression < PrimaryExpression
+
+PrimaryExpression < FloatLiteral 
+	/ IntegerLiteral
 	/ StringLiteral
+	/ CharacterLiteral
+	/ :"(" Expression :")"
 
-Arithmetic < Factor (Addition / Subtraction)*
-Addition < :"+" Factor
-Subtraction < :"-" Factor
-Factor < Primary (Multiplication / Division / Modulo)*
-Multiplication < :"*" Primary
-Division < :"/" Primary
-Modulo < :"%" Primary
-Primary < Parens / Negative / Positive / Number
-Parens < :"(" Arithmetic :")"
-Negative < :"-" Primary
-Positive < :"+" Primary
-Number < FloatLiteral / IntegerLiteral / CharacterLiteral
+Identifier < identifier
+#Identifier < IdentifierStart IdentifierChars?
 
-# <: discards nodes. Replace with < to see nodes in tree
+#IdentifierStart < "_"
+#	/ Letter
+#	/ UniversalAlpha
+
+#IdentifierChars < IdentifierChar+
+
+#IdentifierChar < IdentifierStart
+#	/ "0"
+#	/ NonZeroDigit
+
+#Stms < Stm*
+
+#Stm < qualifiedIdentifier qualifiedIdentifier :";"
+#	/ :"{" Stms :"}" #TODO Needs testing
+#	/ Function
+#	/ ReturnStm
+#	/ Comment
+#	/ Assignment
+
+#Assignment < qualifiedIdentifier qualifiedIdentifier :"=" Exp :";"
+
+#Function < Type Name :"(" :")" FunctionBody
+
+#Type <- qualifiedIdentifier
+
+#Name < qualifiedIdentifier
+
+FunctionBody < BlockStatement
+
+BlockStatement < "{" "}"
+	/ :"{" StatementList :"}"
+
+StatementList < Statement+
+
+Statement < ";"
+	/ NonEmptyStatement
+
+NonEmptyStatement < NonEmptyStatementNoCaseNoDefault
+
+NonEmptyStatementNoCaseNoDefault < DeclarationStatement
+	/ ReturnStatement
+
+DeclarationStatement < Declaration
+
+ReturnStatement <^ "return" Expression? :";"
+
+Expression < CommaExpression
+
+CommaExpression < AssignExpression
+#CommaExpression < AssignExpression "," CommaExpression
+#	/ AssignExpression
+
+#ReturnStm < :"return" Exp? :";"
+
+#Exp < Arithmetic
+#	/ StringLiteral
+
+#Arithmetic < Factor (Addition / Subtraction)*
+#Addition < :"+" Factor
+#Subtraction < :"-" Factor
+#Factor < Primary (Multiplication / Division / Modulo)*
+#Multiplication < :"*" Primary
+#Division < :"/" Primary
+#Modulo < :"%" Primary
+#Primary < Parens / Negative / Positive / Number
+#Parens < :"(" Arithmetic :")"
+#Negative < :"-" Primary
+#Positive < :"+" Primary
+#Number < FloatLiteral / IntegerLiteral / CharacterLiteral
+
+Spacing <- (Space / Comment)*
+
+Space <- "\u0020" / "\u0009" / "\u000b" / "\u000c" / eol
+
 Comment <: BlockComment
 	/ LineComment
 	/ NestingBlockComment
