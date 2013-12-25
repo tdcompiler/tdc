@@ -146,7 +146,8 @@ DeclDef < Declaration
 
 Declaration < Decl
 
-Decl < BasicType Declarators :";"
+Decl < StorageClasses Decl
+	/ BasicType Declarators :";"
 	/ BasicType Declarator FunctionBody
 
 BasicType < BasicTypeX
@@ -159,19 +160,35 @@ BasicTypeX < "bool" / "byte" / "ubyte" / "short" / "ushort" / "int"
 
 IdentifierList < Identifier
 
+StorageClasses < StorageClass+
+
+StorageClass < Extern
+
+Extern < "extern" ("(" LinkageType ")")?
+
+LinkageType < "C"
+
 Declarator < Identifier DeclaratorSuffixes?
 
 DeclaratorSuffixes < DeclaratorSuffix+
 
 DeclaratorSuffix < Parameters
 
-Parameters < :"(" :")"
-	/ :"(" ParameterList :")"
+Parameters < :"(" ParameterList? :")"
 
-ParameterList < Parameter+
+ParameterList < Parameter (:"," (Parameter / "..."))*
 	/ "..."
 
-Parameter < BasicType Declarator
+Parameter < InOut? BasicType Declarator
+	/ InOut? Type Declarator?
+
+InOut < InOutX
+
+InOutX < "in"
+
+Type < BasicType Declarator2
+
+Declarator2 < BasicType2? DeclaratorSuffixes?
 
 BasicType2 < "*"
 
