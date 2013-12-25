@@ -236,23 +236,6 @@ Identifier < identifier
 #	/ "0"
 #	/ NonZeroDigit
 
-#Stms < Stm*
-
-#Stm < qualifiedIdentifier qualifiedIdentifier :";"
-#	/ :"{" Stms :"}" #TODO Needs testing
-#	/ Function
-#	/ ReturnStm
-#	/ Comment
-#	/ Assignment
-
-#Assignment < qualifiedIdentifier qualifiedIdentifier :"=" Exp :";"
-
-#Function < Type Name :"(" :")" FunctionBody
-
-#Type <- qualifiedIdentifier
-
-#Name < qualifiedIdentifier
-
 FunctionBody < BlockStatement
 
 BlockStatement < "{" "}"
@@ -275,26 +258,6 @@ ReturnStatement <^ "return" Expression? :";"
 Expression < CommaExpression
 
 CommaExpression < AssignExpression
-#CommaExpression < AssignExpression "," CommaExpression
-#	/ AssignExpression
-
-#ReturnStm < :"return" Exp? :";"
-
-#Exp < Arithmetic
-#	/ StringLiteral
-
-#Arithmetic < Factor (Addition / Subtraction)*
-#Addition < :"+" Factor
-#Subtraction < :"-" Factor
-#Factor < Primary (Multiplication / Division / Modulo)*
-#Multiplication < :"*" Primary
-#Division < :"/" Primary
-#Modulo < :"%" Primary
-#Primary < Parens / Negative / Positive / Number
-#Parens < :"(" Arithmetic :")"
-#Negative < :"-" Primary
-#Positive < :"+" Primary
-#Number < FloatLiteral / IntegerLiteral / CharacterLiteral
 
 Spacing <- (Space / Comment)*
 
