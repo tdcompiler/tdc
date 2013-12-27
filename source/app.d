@@ -9,7 +9,13 @@ alias std.file.write writeFile;
 enum testDir = "../tests";
 enum resultDir = "../results";
 
+struct Work {
+	ParseTree parse;
+	string semant;
+}
+
 private bool overwriteAllPassing = false;
+private Work[] cases = [];
 
 void main(string[] args) {
 	auto success = 0;
@@ -45,6 +51,17 @@ void main(string[] args) {
 	}
 }
 
+string typeCheck(in ParseTree n) {
+	switch (n.name) {
+		case "D": return typeCheck(n.children[0]);
+		case "D.Module": return typeCheck(n.children[0]);
+		case "D.DeclDef": return "pik";
+		default: string result = "";
+				 foreach (c; n.children) result ~= c.typeCheck();
+				 return result;
+	}
+}
+
 auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	mixin(grammar(dGrammar));
 	//mixin(grammar(Dgrammar));
@@ -69,6 +86,10 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	auto file = readText(name);
 	file = file.replaceAll!(a => "\n")(regex(r"\r\n"));
 	auto tree = D(file);
+	Work w;
+	w.parse = tree;
+	w.semant = tree.typeCheck;
+	cases ~= w;
 	auto treeText = tree.toString;
 	if (!tree.successful) {
 		errors ~= name ~ "\n" ~ file ~ "\n" ~ treeText ~ "\n"
@@ -94,6 +115,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 				writeln(file);
 				writeln("Previous result identical to current result:");
 				writeln(treeText);
+				writeln(w.semant);
 			}
 			return tree.successful;
 		}
@@ -150,29 +172,29 @@ Decl < StorageClasses Decl
 	/ BasicType Declarators :";"
 	/ BasicType Declarator FunctionBody
 
-BasicType < BasicTypeX
+BasicType <- BasicTypeX
 	/ IdentifierList
 
-BasicTypeX < "bool" / "byte" / "ubyte" / "short" / "ushort" / "int"
+BasicTypeX <- "bool" / "byte" / "ubyte" / "short" / "ushort" / "int"
 	/ "uint" / "long" / "ulong" / "char" / "wchar" / "dchar"
 	/ "float" / "double" / "real" / "ifloat" / "idouble" / "ireal"
 	/ "cfloat" / "cdouble" / "creal" / "void"
 
-IdentifierList < Identifier
+IdentifierList <- Identifier
 
-StorageClasses < StorageClass+
+StorageClasses <- StorageClass+
 
-StorageClass < Extern
+StorageClass <- Extern
 
-Extern < "extern" ("(" LinkageType ")")?
+Extern <- "extern" ("(" LinkageType ")")?
 
-LinkageType < "C"
+LinkageType <- "C"
 
-Declarator < Identifier DeclaratorSuffixes?
+Declarator < BasicType2? Identifier DeclaratorSuffixes?
 
-DeclaratorSuffixes < DeclaratorSuffix+
+DeclaratorSuffixes <- DeclaratorSuffix+
 
-DeclaratorSuffix < Parameters
+DeclaratorSuffix <- Parameters
 
 Parameters < :"(" ParameterList? :")"
 
@@ -180,42 +202,42 @@ ParameterList < Parameter (:"," (Parameter / "..."))*
 	/ "..."
 
 Parameter < InOut? BasicType Declarator
-	/ InOut? Type Declarator?
+#	/ InOut? Type Declarator?
 
-InOut < InOutX
+InOut <- InOutX
 
-InOutX < "in"
+InOutX <- "in"
 
-Type < BasicType Declarator2
+Type <- BasicType Declarator2
 
-Declarator2 < BasicType2? DeclaratorSuffixes?
+Declarator2 <- BasicType2? DeclaratorSuffixes?
 
-BasicType2 < "*"
+BasicType2 <- "*"
 
-Declarators < DeclaratorInitializer
+Declarators <- DeclaratorInitializer
 
 DeclaratorInitializer < Declarator "=" Initializer
 	/ Declarator
 
-Initializer < NonVoidInitializer
+Initializer <- NonVoidInitializer
 
-NonVoidInitializer < AssignExpression
+NonVoidInitializer <- AssignExpression
 
-AssignExpression < ConditionalExpression
+AssignExpression <- ConditionalExpression
 
-ConditionalExpression < OrOrExpression
+ConditionalExpression <- OrOrExpression
 
-OrOrExpression < AndAndExpression
+OrOrExpression <- AndAndExpression
 
-AndAndExpression < OrExpression
+AndAndExpression <- OrExpression
 
-OrExpression < XorExpression
+OrExpression <- XorExpression
 
-XorExpression < AndExpression
+XorExpression <- AndExpression
 
-AndExpression < ShiftExpression
+AndExpression <- ShiftExpression
 
-ShiftExpression < AddExpression
+ShiftExpression <- AddExpression
 
 AddExpression < MulExpression "+" AddExpression
 	/ MulExpression "-" AddExpression
@@ -230,53 +252,56 @@ UnaryExpression < "-" UnaryExpression
 	/ "+" UnaryExpression
 	/ PowExpression
 
-PowExpression < PostfixExpression
+PowExpression <- PostfixExpression
 
-PostfixExpression < PrimaryExpression
+PostfixExpression <- PrimaryExpression
 
-PrimaryExpression < FloatLiteral 
+PrimaryExpression <- FloatLiteral 
 	/ IntegerLiteral
 	/ StringLiteral
 	/ CharacterLiteral
 	/ :"(" Expression :")"
 
-Identifier < identifier
+Identifier <- identifier
 #Identifier < IdentifierStart IdentifierChars?
 
-#IdentifierStart < "_"
+#IdentifierStart <- "_"
 #	/ Letter
 #	/ UniversalAlpha
 
-#IdentifierChars < IdentifierChar+
+#IdentifierChars <- IdentifierChar+
 
-#IdentifierChar < IdentifierStart
+#IdentifierChar <- IdentifierStart
 #	/ "0"
 #	/ NonZeroDigit
 
-FunctionBody < BlockStatement
+FunctionBody <- BlockStatement
 
 BlockStatement < "{" "}"
 	/ :"{" StatementList :"}"
 
-StatementList < Statement+
+StatementList <- Statement+
 
-Statement < ";"
+Statement <- ";"
 	/ NonEmptyStatement
 
-NonEmptyStatement < NonEmptyStatementNoCaseNoDefault
+NonEmptyStatement <- NonEmptyStatementNoCaseNoDefault
 
-NonEmptyStatementNoCaseNoDefault < DeclarationStatement
+NonEmptyStatementNoCaseNoDefault <- DeclarationStatement
 	/ ReturnStatement
 
-DeclarationStatement < Declaration
+DeclarationStatement <- Declaration
 
-ReturnStatement <^ "return" Expression? :";"
+ReturnStatement < "return" Expression? :";"
 
-Expression < CommaExpression
+Expression <- CommaExpression
 
-CommaExpression < AssignExpression
+CommaExpression <- AssignExpression
 
-Spacing <- (Space / Comment)*
+Spacing <- (Comment / spacing)*
+#Spacing <- (spacing / Comment)*
+#Spacing <- (Space / Comment)*
+#Spacing <- (space / Comment)*
 
 Space <- "\u0020" / "\u0009" / "\u000b" / "\u000c" / eol
 
@@ -288,34 +313,34 @@ BlockComment <~ :"/*" (!"*/" .)* :"*/"
 LineComment <~ :"//" (!eol .)* :eol
 NestingBlockComment <~ :"/+" (NestingBlockComment / (!("+/" / "/+") .))* :"+/"
 
-StringLiteral < DoubleQuotedString
+StringLiteral <- DoubleQuotedString
 
-#StringLiteral < WysiqygString
+#StringLiteral <- WysiqygString
 #	/ AlternateWysiwygString
 #	/ DoubleQuotedString
 #	/ HexString
 #	/ DelimitedString
 #	/ TokenString
 
-#WysiqygString < "r\"" WysiwygCharacters doublequote StringPostfix?
+#WysiqygString <- "r\"" WysiwygCharacters doublequote StringPostfix?
 
-#AlternateWysiwygString < backquote WysiwygCharacters backquote StringPostfix?
+#AlternateWysiwygString <- backquote WysiwygCharacters backquote StringPostfix?
 
-#WysiwygCharacters < WysiwygCharacter+
+#WysiwygCharacters <- WysiwygCharacter+
 
-#WysiwygCharacter < Character
+#WysiwygCharacter <- Character
 #	/ eol
 
-DoubleQuotedString < :doublequote "" :doublequote StringPostfix?
+DoubleQuotedString <- :doublequote "" :doublequote StringPostfix?
 	/ :doublequote DoubleQuotedCharacters :doublequote StringPostfix?
 
 DoubleQuotedCharacters <~ DoubleQuotedCharacter*
 
-DoubleQuotedCharacter < (!doublequote Character)
+DoubleQuotedCharacter <- (!doublequote Character)
 	/ EscapeSequence
 	/ eol
 
-EscapeSequence < "\\'" #/ "\\\"" / "\\?" / "\\0" / "\\a" / "\\b"
+EscapeSequence <- "\\'" #/ "\\\"" / "\\?" / "\\0" / "\\a" / "\\b"
 	/ "\\f" / "\\n" / "\\r" / "\\t" / "\\v"
 	/ "\\x" HexDigit HexDigit
 	/ backslash OctalDigit
@@ -325,26 +350,26 @@ EscapeSequence < "\\'" #/ "\\\"" / "\\?" / "\\0" / "\\a" / "\\b"
 	/ "\\U" HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit
 #	/ backslash NamedCharacterEntity
 
-#HexString < "x\"" HexStringChars doublequote StringPostfix?
+#HexString <- "x\"" HexStringChars doublequote StringPostfix?
 
-#HexStringChars < HexStringChar+
+#HexStringChars <- HexStringChar+
 
-#HexStringChar < HexDigit
+#HexStringChar <- HexDigit
 #	/ WhiteSpace
 #	/ eol
 
-StringPostfix < "c" / "w" / "d"
+StringPostfix <- "c" / "w" / "d"
 
-#DelimitedString < "q\"" Delimiter WysiwygCharacters Delimiter doublequote
+#DelimitedString <- "q\"" Delimiter WysiwygCharacters Delimiter doublequote
 
-#TokenString < "q{" Tokens "}"
+#TokenString <- "q{" Tokens "}"
 
-CharacterLiteral < :quote SingleQuotedCharacter :quote
+CharacterLiteral <- :quote SingleQuotedCharacter :quote
 
-SingleQuotedCharacter < EscapeSequence
+SingleQuotedCharacter <- EscapeSequence
 	/ (!quote Character)
 
-Character < .
+Character <- .
 
 FloatLiteral <- Float
 	/ Float Suffix
@@ -372,7 +397,7 @@ HexPrefix <: "0x" / "0X"
 
 HexExponent <- HexExponentStart DecimalDigitsNoSingleUS
 
-HexExponentStart < "p+" / "P+" / "p-" / "P-" / "p" / "P"
+HexExponentStart <- "p+" / "P+" / "p-" / "P-" / "p" / "P"
 
 Suffix <- FloatSuffix
 	/ RealSuffix
@@ -391,7 +416,7 @@ LeadingDecimal <- DecimalInteger
 
 IntegerLiteral <- Integer IntegerSuffix?
 
-Integer < BinaryInteger
+Integer <- BinaryInteger
 	/ HexadecimalInteger
 	/ DecimalInteger
 
