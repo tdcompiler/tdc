@@ -1,8 +1,10 @@
+module source.app;
+
 import std.stdio,
-	   std.file,
-	   std.algorithm,
-	   std.regex,
-	   pegged.grammar;
+	std.file,
+	std.algorithm,
+	std.regex,
+	pegged.grammar;
 
 alias std.file.write writeFile;
 
@@ -63,7 +65,7 @@ string typeCheck(in ParseTree n) {
 }
 
 auto parse(string name, ref string[] errors, bool forceOutput = false) {
-	mixin(grammar(dGrammar));
+	//mixin(grammar(dGrammar));
 	//mixin(grammar(Dgrammar));
 
 	/*
@@ -83,6 +85,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	/*
 	 * The target file is read and parsed.
 	 */
+	import source.grammar;
 	auto file = readText(name);
 	file = file.replaceAll!(a => "\n")(regex(r"\r\n"));
 	auto tree = D(file);
@@ -157,7 +160,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	return tree.successful;
 }
 
-enum dGrammar = `
+/+enum dGrammar = `
 D:
 
 Module < DeclDefs eoi
@@ -476,3 +479,4 @@ HexDigit <- DecimalDigit
 
 HexLetter <- [a-f] / [A-F] / :"_"
 `;
++/		
