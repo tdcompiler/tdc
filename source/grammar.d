@@ -1,13 +1,5 @@
 module source.grammar;
 
-import pegged.grammar;
-
-/*static this() {
-	asModule("grammar", "source/grammar", dGrammar);
-}*/
-
-mixin(grammar(dGrammar));
-
 enum dGrammar = `
 D:
 

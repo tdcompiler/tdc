@@ -16,10 +16,18 @@ struct Work {
 	string semant;
 }
 
+//enum grammar = findGrammar();
+
 private bool overwriteAllPassing = false;
 private Work[] cases = [];
 
 void main(string[] args) {
+	/*
+	 * The compiler relies on a precompiled version of the grammar, to save
+	 * time. Since D does not have dynamic loading yet and the precompiled
+	*/
+	if (precompile) return;
+
 	auto success = 0;
 	auto failed = 0;
 	string[] errors = [];
@@ -57,7 +65,7 @@ string typeCheck(in ParseTree n) {
 	switch (n.name) {
 		case "D": return typeCheck(n.children[0]);
 		case "D.Module": return typeCheck(n.children[0]);
-		case "D.DeclDef": return "pik";
+		case "D.DeclDef": return "test";
 		default: string result = "";
 				 foreach (c; n.children) result ~= c.typeCheck();
 				 return result;
@@ -65,9 +73,6 @@ string typeCheck(in ParseTree n) {
 }
 
 auto parse(string name, ref string[] errors, bool forceOutput = false) {
-	//mixin(grammar(dGrammar));
-	//mixin(grammar(Dgrammar));
-
 	/*
 	 * Replaces \ with / in path to give to unite Unix and Windows
 	 * syntax for string processing. Then the file itself is stripped
@@ -85,7 +90,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	/*
 	 * The target file is read and parsed.
 	 */
-	import source.grammar;
+	import precompiled_grammar;
 	auto file = readText(name);
 	file = file.replaceAll!(a => "\n")(regex(r"\r\n"));
 	auto tree = D(file);
@@ -97,9 +102,6 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	if (!tree.successful) {
 		errors ~= name ~ "\n" ~ file ~ "\n" ~ treeText ~ "\n"
 				~ tree.failMsg ~ "\n";
-		//writeln(file);
-		//writeln(treeText);
-		//writeln(tree.failMsg);
 	}
 
 	if (resultPath.exists) {
@@ -160,323 +162,27 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	return tree.successful;
 }
 
-/+enum dGrammar = `
-D:
+bool precompile() {
+	import std.datetime;
 
-Module < DeclDefs eoi
+	SysTime sourceAccess, sourceModification, precompiledAccess, precompiledModification;//, binaryAccess, binaryModification;
+	getTimes("../source/grammar.d", sourceAccess, sourceModification);
+	getTimes("../source/precompiled_grammar.d", precompiledAccess, precompiledModification);
 
-DeclDefs < DeclDef*
+	if (sourceModification > precompiledModification) {
+		import source.grammar;
 
-DeclDef < Declaration
+		writeln("Precompiled grammar predates current grammar. Parsing grammar...");
+		asModule("precompiled_grammar", "../source/precompiled_grammar", dGrammar);
+		writeln("Grammar has been modified. Please recompile.");
 
-Declaration < Decl
+		return true;
+	}
 
-Decl < StorageClasses Decl
-	/ BasicType Declarators :";"
-	/ BasicType Declarator FunctionBody
+	return false;
+}
 
-BasicType <- BasicTypeX
-	/ IdentifierList
-
-BasicTypeX <- "bool" / "byte" / "ubyte" / "short" / "ushort" / "int"
-	/ "uint" / "long" / "ulong" / "char" / "wchar" / "dchar"
-	/ "float" / "double" / "real" / "ifloat" / "idouble" / "ireal"
-	/ "cfloat" / "cdouble" / "creal" / "void"
-
-IdentifierList <- Identifier
-
-StorageClasses <- StorageClass+
-
-StorageClass <- Extern
-
-Extern <- "extern" ("(" LinkageType ")")?
-
-LinkageType <- "C"
-
-Declarator < BasicType2? Identifier DeclaratorSuffixes?
-
-DeclaratorSuffixes <- DeclaratorSuffix+
-
-DeclaratorSuffix <- Parameters
-
-Parameters < :"(" ParameterList? :")"
-
-ParameterList < Parameter (:"," (Parameter / "..."))*
-	/ "..."
-
-Parameter < InOut? BasicType Declarator
-#	/ InOut? Type Declarator?
-
-InOut <- InOutX
-
-InOutX <- "in"
-
-Type <- BasicType Declarator2
-
-Declarator2 <- BasicType2? DeclaratorSuffixes?
-
-BasicType2 <- "*"
-
-Declarators <- DeclaratorInitializer
-
-DeclaratorInitializer < Declarator "=" Initializer
-	/ Declarator
-
-Initializer <- NonVoidInitializer
-
-NonVoidInitializer <- AssignExpression
-
-AssignExpression <- ConditionalExpression
-
-ConditionalExpression <- OrOrExpression
-
-OrOrExpression <- AndAndExpression
-
-AndAndExpression <- OrExpression
-
-OrExpression <- XorExpression
-
-XorExpression <- AndExpression
-
-AndExpression <- ShiftExpression
-
-ShiftExpression <- AddExpression
-
-AddExpression < MulExpression "+" AddExpression
-	/ MulExpression "-" AddExpression
-	/ MulExpression
-
-MulExpression < UnaryExpression "*" MulExpression
-	/ UnaryExpression "/" MulExpression
-	/ UnaryExpression "%" MulExpression
-	/ UnaryExpression
-
-UnaryExpression < "-" UnaryExpression
-	/ "+" UnaryExpression
-	/ PowExpression
-
-PowExpression <- PostfixExpression
-
-PostfixExpression <- PrimaryExpression
-
-PrimaryExpression <- FloatLiteral 
-	/ IntegerLiteral
-	/ StringLiteral
-	/ CharacterLiteral
-	/ :"(" Expression :")"
-
-Identifier <- identifier
-#Identifier < IdentifierStart IdentifierChars?
-
-#IdentifierStart <- "_"
-#	/ Letter
-#	/ UniversalAlpha
-
-#IdentifierChars <- IdentifierChar+
-
-#IdentifierChar <- IdentifierStart
-#	/ "0"
-#	/ NonZeroDigit
-
-FunctionBody <- BlockStatement
-
-BlockStatement < "{" "}"
-	/ :"{" StatementList :"}"
-
-StatementList <- Statement+
-
-Statement <- ";"
-	/ NonEmptyStatement
-
-NonEmptyStatement <- NonEmptyStatementNoCaseNoDefault
-
-NonEmptyStatementNoCaseNoDefault <- DeclarationStatement
-	/ ReturnStatement
-
-DeclarationStatement <- Declaration
-
-ReturnStatement < "return" Expression? :";"
-
-Expression <- CommaExpression
-
-CommaExpression <- AssignExpression
-
-Spacing <- (Comment / spacing)*
-#Spacing <- (spacing / Comment)*
-#Spacing <- (Space / Comment)*
-#Spacing <- (space / Comment)*
-
-Space <- "\u0020" / "\u0009" / "\u000b" / "\u000c" / eol
-
-Comment <: BlockComment
-	/ LineComment
-	/ NestingBlockComment
-
-BlockComment <~ :"/*" (!"*/" .)* :"*/"
-LineComment <~ :"//" (!eol .)* :eol
-NestingBlockComment <~ :"/+" (NestingBlockComment / (!("+/" / "/+") .))* :"+/"
-
-StringLiteral <- DoubleQuotedString
-
-#StringLiteral <- WysiqygString
-#	/ AlternateWysiwygString
-#	/ DoubleQuotedString
-#	/ HexString
-#	/ DelimitedString
-#	/ TokenString
-
-#WysiqygString <- "r\"" WysiwygCharacters doublequote StringPostfix?
-
-#AlternateWysiwygString <- backquote WysiwygCharacters backquote StringPostfix?
-
-#WysiwygCharacters <- WysiwygCharacter+
-
-#WysiwygCharacter <- Character
-#	/ eol
-
-DoubleQuotedString <- :doublequote "" :doublequote StringPostfix?
-	/ :doublequote DoubleQuotedCharacters :doublequote StringPostfix?
-
-DoubleQuotedCharacters <~ DoubleQuotedCharacter*
-
-DoubleQuotedCharacter <- (!doublequote Character)
-	/ EscapeSequence
-	/ eol
-
-EscapeSequence <- "\\'" #/ "\\\"" / "\\?" / "\\0" / "\\a" / "\\b"
-	/ "\\f" / "\\n" / "\\r" / "\\t" / "\\v"
-	/ "\\x" HexDigit HexDigit
-	/ backslash OctalDigit
-	/ backslash OctalDigit OctalDigit
-	/ backslash OctalDigit OctalDigit OctalDigit
-	/ "\\u" HexDigit HexDigit HexDigit HexDigit
-	/ "\\U" HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit
-#	/ backslash NamedCharacterEntity
-
-#HexString <- "x\"" HexStringChars doublequote StringPostfix?
-
-#HexStringChars <- HexStringChar+
-
-#HexStringChar <- HexDigit
-#	/ WhiteSpace
-#	/ eol
-
-StringPostfix <- "c" / "w" / "d"
-
-#DelimitedString <- "q\"" Delimiter WysiwygCharacters Delimiter doublequote
-
-#TokenString <- "q{" Tokens "}"
-
-CharacterLiteral <- :quote SingleQuotedCharacter :quote
-
-SingleQuotedCharacter <- EscapeSequence
-	/ (!quote Character)
-
-Character <- .
-
-FloatLiteral <- Float
-	/ Float Suffix
-	/ Integer FloatSuffix ImaginarySuffix?
-	/ Integer ImaginarySuffix
-	/ Integer RealSuffix ImaginarySuffix
-
-Float <- DecimalFloat
-	/ HexFloat
-
-DecimalFloat <~ LeadingDecimal "." DecimalDigits?
-	/ DecimalDigits "." DecimalDigitsNoSingleUS DecimalExponent
-	/ "." DecimalInteger DecimalExponent?
-	/ LeadingDecimal DecimalExponent
-
-DecimalExponent <- DecimalExponentStart DecimalDigitsNoSingleUS
-
-DecimalExponentStart <- "e+" / "E+" / "e-" / "E-" / "e" / "E"
-
-HexFloat <- HexPrefix HexDigitsNoSingleUS "." HexDigitsNoSingleUS HexExponent
-	/ HexPrefix "." HexDigitsNoSingleUS HexExponent
-	/ HexPrefix HexDigitsNoSingleUS HexExponent
-
-HexPrefix <: "0x" / "0X"
-
-HexExponent <- HexExponentStart DecimalDigitsNoSingleUS
-
-HexExponentStart <- "p+" / "P+" / "p-" / "P-" / "p" / "P"
-
-Suffix <- FloatSuffix
-	/ RealSuffix
-	/ ImaginarySuffix
-	/ FloatSuffix ImaginarySuffix
-	/ RealSuffix ImaginarySuffix
-
-FloatSuffix <- "f" / "F"
-
-RealSuffix <- "L"
-
-ImaginarySuffix <- "i"
-
-LeadingDecimal <- DecimalInteger
-	/ "0" DecimalDigitsNoSingleUS
-
-IntegerLiteral <- Integer IntegerSuffix?
-
-Integer <- BinaryInteger
-	/ HexadecimalInteger
-	/ DecimalInteger
-
-IntegerSuffix <- "Lu" / "LU" / "uL" / "UL" / "L" / "U" / "u"
-
-DecimalInteger <~ "0"
-	/ NonZeroDigit DecimalDigitsUS?
-
-BinaryInteger <~ BinPrefix BinaryDigits
-
-BinPrefix <: "0b" / "0B"
-
-HexadecimalInteger <~ HexPrefix HexDigitsNoSingleUS
-
-NonZeroDigit <- [1-9]
-
-DecimalDigits <- DecimalDigit+
-
-DecimalDigitsUS <~ DecimalDigitUS+
-
-DecimalDigitsNoSingleUS <~ DecimalDigit DecimalDigitsUS?
-	/ DecimalDigitsUS DecimalDigit
-
-DecimalDigitNoStartingUS <- DecimalDigit DecimalDigitsUS?
-
-DecimalDigit <- "0" / NonZeroDigit
-
-DecimalDigitUS <- DecimalDigit / :"_"
-
-BinaryDigitsUS <- BinaryDigitUS+
-
-BinaryDigits <- BinaryDigitsUS
-
-BinaryDigit <- [0-1]
-
-BinaryDigitUS <- BinaryDigit / :"_"
-
-OctalDigits <- OctalDigit+
-
-OctalDigitsUS <- OctalDigitUS+
-
-OctalDigit <- [0-7]
-
-OctalDigitUS <- OctalDigit / :"_"
-
-HexDigits <- HexDigit+
-
-HexDigitsUS <- HexDigitUS+
-
-HexDigitUS <- HexDigit / :"_"
-
-HexDigitsNoSingleUS <~ HexDigit HexDigitsUS?
-	/ HexDigitsUS HexDigit
-
-HexDigit <- DecimalDigit
-	/ HexLetter
-
-HexLetter <- [a-f] / [A-F] / :"_"
-`;
-+/		
+/*string findGrammar() {
+	precompile();
+	return "source/precompiled_grammar.d".readText();
+}*/
