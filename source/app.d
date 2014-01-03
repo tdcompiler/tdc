@@ -74,7 +74,8 @@ string typeCheck(in ParseTree n) {
 			if (isFunction(n)) {
 				return "Definitely a function";
 			} else {
-				throw new Exception("Herp derp");
+				return "No idea what this is";
+				//throw new Exception("Herp derp");
 			}
 		}
 		default: string result = "";
@@ -190,6 +191,17 @@ bool precompile() {
 	SysTime sourceAccess, sourceModification, precompiledAccess, precompiledModification;
 
 	getTimes("../source/grammar.d", sourceAccess, sourceModification);
+
+	if (!"../source/precompiled_grammar.d".exists) {
+		import source.grammar;
+
+		writeln("Can't find precompiled grammar. Parsing grammar...");
+		
+		asModule("precompiled_grammar", "../source/precompiled_grammar", dGrammar);
+
+		return true;
+	}
+
 	getTimes("../source/precompiled_grammar.d", precompiledAccess, precompiledModification);
 
 	if (sourceModification > precompiledModification) {
