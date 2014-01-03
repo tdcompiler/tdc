@@ -24,7 +24,8 @@ private Work[] cases = [];
 void main(string[] args) {
 	/*
 	 * The compiler relies on a precompiled version of the grammar, to save
-	 * time. Since D does not have dynamic loading yet and the precompiled
+	 * time. D does not allow file manipulation at compiletime and there is no
+	 * dynamic loading yet, so this is a rather sad solution.
 	*/
 	if (precompile) return;
 
@@ -32,7 +33,7 @@ void main(string[] args) {
 	auto failed = 0;
 	string[] errors = [];
 	if (args.length == 1) {
-		foreach (string name; dirEntries(testDir, "*.d", SpanMode.depth)) {
+		foreach (immutable string name; dirEntries(testDir, "*.d", SpanMode.depth)) {
 			if (parse(name, errors)) success++;
 			else failed++;
 		}
@@ -41,11 +42,15 @@ void main(string[] args) {
 		writeln("Failed testcases:\t", failed);
 		writeln;
 	} else {
-		foreach (string name; args[1 .. $]) {
+		foreach (immutable string name; args[1 .. $]) {
 			parse(testDir ~ "/" ~ name, errors, true);
 		}
 	}
-	foreach (i, e; errors) {
+
+	/*
+	 * All errors are available to be viewed or ignored.
+	 */
+	foreach (immutable i, ref e; errors) {
 		write("View error ", i + 1, " - Yes, No, All yes, Quit: ");
 		char reply;
 		scanf("%s", &reply);
@@ -54,7 +59,7 @@ void main(string[] args) {
 		} else if (reply == 'q') {
 			return;
 		} else if (reply == 'a') {
-			foreach (e2; errors[i .. $])
+			foreach (immutable e2; errors[i .. $])
 				e2.writeln;
 			return;
 		}
@@ -65,11 +70,28 @@ string typeCheck(in ParseTree n) {
 	switch (n.name) {
 		case "D": return typeCheck(n.children[0]);
 		case "D.Module": return typeCheck(n.children[0]);
-		case "D.DeclDef": return "test";
+		case "D.DeclDef": {
+			if (isFunction(n)) {
+				return "Definitely a function";
+			} else {
+				throw new Exception("Herp derp");
+			}
+		}
 		default: string result = "";
-				 foreach (c; n.children) result ~= c.typeCheck();
+				 foreach (const c; n.children) result ~= c.typeCheck();
 				 return result;
 	}
+}
+
+//struct Node {
+//	bool immutable_, const_, 
+//}
+
+bool isFunction(in ParseTree n) {
+	foreach (c; n.children) {
+		if (c.name == "D.FunctionBody") return true;
+	}
+	return false;
 }
 
 auto parse(string name, ref string[] errors, bool forceOutput = false) {
@@ -165,7 +187,8 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 bool precompile() {
 	import std.datetime;
 
-	SysTime sourceAccess, sourceModification, precompiledAccess, precompiledModification;//, binaryAccess, binaryModification;
+	SysTime sourceAccess, sourceModification, precompiledAccess, precompiledModification;
+
 	getTimes("../source/grammar.d", sourceAccess, sourceModification);
 	getTimes("../source/precompiled_grammar.d", precompiledAccess, precompiledModification);
 
@@ -173,7 +196,9 @@ bool precompile() {
 		import source.grammar;
 
 		writeln("Precompiled grammar predates current grammar. Parsing grammar...");
+
 		asModule("precompiled_grammar", "../source/precompiled_grammar", dGrammar);
+
 		writeln("Grammar has been modified. Please recompile.");
 
 		return true;
@@ -181,8 +206,3 @@ bool precompile() {
 
 	return false;
 }
-
-/*string findGrammar() {
-	precompile();
-	return "source/precompiled_grammar.d".readText();
-}*/
