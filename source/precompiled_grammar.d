@@ -1,332 +1,10 @@
-/++
-This module was automatically generated from the following grammar:
 
-
-D:
-
-Module < DeclDefs eoi
-
-DeclDefs < DeclDef*
-
-DeclDef < Declaration
-
-Declaration < Decl
-
-Decl < StorageClasses Decl
-	/ BasicType Declarators :";"
-	/ BasicType Declarator FunctionBody
-
-BasicType <- BasicTypeX
-	/ IdentifierList
-
-BasicTypeX <- "bool" / "byte" / "ubyte" / "short" / "ushort" / "int"
-	/ "uint" / "long" / "ulong" / "char" / "wchar" / "dchar"
-	/ "float" / "double" / "real" / "ifloat" / "idouble" / "ireal"
-	/ "cfloat" / "cdouble" / "creal" / "void"
-
-IdentifierList <- Identifier
-
-StorageClasses <- StorageClass+
-
-StorageClass <- Extern
-
-Extern <- "extern" ("(" LinkageType ")")?
-
-LinkageType <- "C"
-
-Declarator < BasicType2? Identifier DeclaratorSuffixes?
-
-DeclaratorSuffixes <- DeclaratorSuffix+
-
-DeclaratorSuffix <- Parameters
-
-Parameters < :"(" ParameterList? :")"
-
-ParameterList < Parameter (:"," (Parameter / "..."))*
-	/ "..."
-
-Parameter < InOut? BasicType Declarator
-#	/ InOut? Type Declarator?
-
-InOut <- InOutX
-
-InOutX <- "in"
-
-Type <- BasicType Declarator2
-
-Declarator2 <- BasicType2? DeclaratorSuffixes?
-
-BasicType2 <- "*"
-
-Declarators <- DeclaratorInitializer
-
-DeclaratorInitializer < Declarator "=" Initializer
-	/ Declarator
-
-Initializer <- NonVoidInitializer
-
-NonVoidInitializer <- AssignExpression
-
-AssignExpression <- ConditionalExpression
-
-ConditionalExpression <- OrOrExpression
-
-OrOrExpression <- AndAndExpression
-
-AndAndExpression <- OrExpression
-
-OrExpression <- XorExpression
-
-XorExpression <- AndExpression
-
-AndExpression <- ShiftExpression
-
-ShiftExpression <- AddExpression
-
-AddExpression < MulExpression "+" AddExpression
-	/ MulExpression "-" AddExpression
-	/ MulExpression
-
-MulExpression < UnaryExpression "*" MulExpression
-	/ UnaryExpression "/" MulExpression
-	/ UnaryExpression "%" MulExpression
-	/ UnaryExpression
-
-UnaryExpression < "-" UnaryExpression
-/ "+" UnaryExpression
-	/ PowExpression
-
-PowExpression <- PostfixExpression
-
-PostfixExpression <- PrimaryExpression
-
-PrimaryExpression <- FloatLiteral 
-	/ IntegerLiteral
-	/ StringLiteral
-	/ CharacterLiteral
-	/ :"(" Expression :")"
-
-Identifier <- identifier
-#Identifier < IdentifierStart IdentifierChars?
-
-#IdentifierStart <- "_"
-#	/ Letter
-#	/ UniversalAlpha
-
-#IdentifierChars <- IdentifierChar+
-
-#IdentifierChar <- IdentifierStart
-#	/ "0"
-#	/ NonZeroDigit
-
-FunctionBody <- BlockStatement
-
-BlockStatement < "{" "}"
-	/ :"{" StatementList :"}"
-
-StatementList <- Statement+
-
-Statement <- ";"
-	/ NonEmptyStatement
-
-NonEmptyStatement <- NonEmptyStatementNoCaseNoDefault
-
-NonEmptyStatementNoCaseNoDefault <- DeclarationStatement
-	/ ReturnStatement
-
-DeclarationStatement <- Declaration
-
-ReturnStatement < "return" Expression? :";"
-
-Expression <- CommaExpression
-
-CommaExpression <- AssignExpression
-
-Spacing <- (Comment / spacing)*
-#Spacing <- (spacing / Comment)*
-#Spacing <- (Space / Comment)*
-#Spacing <- (space / Comment)*
-
-Space <- "\u0020" / "\u0009" / "\u000b" / "\u000c" / eol
-
-Comment <: BlockComment
-	/ LineComment
-	/ NestingBlockComment
-
-BlockComment <~ :"/*" (!"*/" .)* :"*/"
-LineComment <~ :"//" (!eol .)* :eol
-NestingBlockComment <~ :"/+" (NestingBlockComment / (!("+/" / "/+") .))* :"+/"
-
-StringLiteral <- DoubleQuotedString
-
-#StringLiteral <- WysiqygString
-#	/ AlternateWysiwygString
-#	/ DoubleQuotedString
-#	/ HexString
-#	/ DelimitedString
-#	/ TokenString
-
-#WysiqygString <- "r\"" WysiwygCharacters doublequote StringPostfix?
-
-#AlternateWysiwygString <- backquote WysiwygCharacters backquote StringPostfix?
-
-#WysiwygCharacters <- WysiwygCharacter+
-
-#WysiwygCharacter <- Character
-#	/ eol
-
-DoubleQuotedString <- :doublequote "" :doublequote StringPostfix?
-	/ :doublequote DoubleQuotedCharacters :doublequote StringPostfix?
-
-DoubleQuotedCharacters <~ DoubleQuotedCharacter*
-
-DoubleQuotedCharacter <- (!doublequote Character)
-	/ EscapeSequence
-	/ eol
-
-EscapeSequence <- "\\'" #/ "\\\"" / "\\?" / "\\0" / "\\a" / "\\b"
-	/ "\\f" / "\\n" / "\\r" / "\\t" / "\\v"
-	/ "\\x" HexDigit HexDigit
-	/ backslash OctalDigit
-	/ backslash OctalDigit OctalDigit
-	/ backslash OctalDigit OctalDigit OctalDigit
-	/ "\\u" HexDigit HexDigit HexDigit HexDigit
-	/ "\\U" HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit HexDigit
-#	/ backslash NamedCharacterEntity
-
-#HexString <- "x\"" HexStringChars doublequote StringPostfix?
-
-#HexStringChars <- HexStringChar+
-
-#HexStringChar <- HexDigit
-#	/ WhiteSpace
-#	/ eol
-
-StringPostfix <- "c" / "w" / "d"
-
-#DelimitedString <- "q\"" Delimiter WysiwygCharacters Delimiter doublequote
-
-#TokenString <- "q{" Tokens "}"
-
-CharacterLiteral <- :quote SingleQuotedCharacter :quote
-
-SingleQuotedCharacter <- EscapeSequence
-	/ (!quote Character)
-
-Character <- .
-
-FloatLiteral <- Float
-	/ Float Suffix
-	/ Integer FloatSuffix ImaginarySuffix?
-	/ Integer ImaginarySuffix
-	/ Integer RealSuffix ImaginarySuffix
-
-Float <- DecimalFloat
-	/ HexFloat
-
-DecimalFloat <~ LeadingDecimal "." DecimalDigits?
-	/ DecimalDigits "." DecimalDigitsNoSingleUS DecimalExponent
-	/ "." DecimalInteger DecimalExponent?
-	/ LeadingDecimal DecimalExponent
-
-DecimalExponent <- DecimalExponentStart DecimalDigitsNoSingleUS
-
-DecimalExponentStart <- "e+" / "E+" / "e-" / "E-" / "e" / "E"
-
-HexFloat <- HexPrefix HexDigitsNoSingleUS "." HexDigitsNoSingleUS HexExponent
-	/ HexPrefix "." HexDigitsNoSingleUS HexExponent
-	/ HexPrefix HexDigitsNoSingleUS HexExponent
-
-HexPrefix <: "0x" / "0X"
-
-HexExponent <- HexExponentStart DecimalDigitsNoSingleUS
-
-HexExponentStart <- "p+" / "P+" / "p-" / "P-" / "p" / "P"
-
-Suffix <- FloatSuffix
-	/ RealSuffix
-	/ ImaginarySuffix
-	/ FloatSuffix ImaginarySuffix
-	/ RealSuffix ImaginarySuffix
-
-FloatSuffix <- "f" / "F"
-
-RealSuffix <- "L"
-
-ImaginarySuffix <- "i"
-
-LeadingDecimal <- DecimalInteger
-	/ "0" DecimalDigitsNoSingleUS
-
-IntegerLiteral <- Integer IntegerSuffix?
-
-Integer <- BinaryInteger
-	/ HexadecimalInteger
-	/ DecimalInteger
-
-IntegerSuffix <- "Lu" / "LU" / "uL" / "UL" / "L" / "U" / "u"
-
-DecimalInteger <~ "0"
-	/ NonZeroDigit DecimalDigitsUS?
-
-BinaryInteger <~ BinPrefix BinaryDigits
-
-BinPrefix <: "0b" / "0B"
-
-HexadecimalInteger <~ HexPrefix HexDigitsNoSingleUS
-
-NonZeroDigit <- [1-9]
-
-DecimalDigits <- DecimalDigit+
-
-DecimalDigitsUS <~ DecimalDigitUS+
-
-DecimalDigitsNoSingleUS <~ DecimalDigit DecimalDigitsUS?
-	/ DecimalDigitsUS DecimalDigit
-
-DecimalDigitNoStartingUS <- DecimalDigit DecimalDigitsUS?
-
-DecimalDigit <- "0" / NonZeroDigit
-
-DecimalDigitUS <- DecimalDigit / :"_"
-
-BinaryDigitsUS <- BinaryDigitUS+
-
-BinaryDigits <- BinaryDigitsUS
-
-BinaryDigit <- [0-1]
-
-BinaryDigitUS <- BinaryDigit / :"_"
-
-OctalDigits <- OctalDigit+
-
-OctalDigitsUS <- OctalDigitUS+
-
-OctalDigit <- [0-7]
-
-OctalDigitUS <- OctalDigit / :"_"
-
-HexDigits <- HexDigit+
-
-HexDigitsUS <- HexDigitUS+
-
-HexDigitUS <- HexDigit / :"_"
-
-HexDigitsNoSingleUS <~ HexDigit HexDigitsUS?
-	/ HexDigitsUS HexDigit
-
-HexDigit <- DecimalDigit
-	/ HexLetter
-
-HexLetter <- [a-f] / [A-F] / :"_"
-
-
-+/
-module precompiled_grammar;
+module source.precompiled_grammar;
 
 public import pegged.peg;
 import std.algorithm: startsWith;
 import std.functional: toDelegate;
+import source.semantic;
 
 struct GenericD(TParseTree)
 {
@@ -383,6 +61,7 @@ struct GenericD(TParseTree)
         rules["PrimaryExpression"] = toDelegate(&D.PrimaryExpression);
         rules["Identifier"] = toDelegate(&D.Identifier);
         rules["FunctionBody"] = toDelegate(&D.FunctionBody);
+        rules["BodyStatement"] = toDelegate(&D.BodyStatement);
         rules["BlockStatement"] = toDelegate(&D.BlockStatement);
         rules["StatementList"] = toDelegate(&D.StatementList);
         rules["Statement"] = toDelegate(&D.Statement);
@@ -455,7 +134,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module")(p);
         }
         else
         {
@@ -463,7 +142,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module"), "Module")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module"), "Module")(p);
                 memo[tuple(`Module`,p.end)] = result;
                 return result;
             }
@@ -474,12 +153,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module"), "Module")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, DeclDefs, Spacing), pegged.peg.wrapAround!(Spacing, eoi, Spacing)), "D.Module"), "Module")(TParseTree("", false,[], s));
         }
     }
     static string Module(GetName g)
@@ -491,7 +170,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs")(p);
+            return         pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs")(p);
         }
         else
         {
@@ -499,7 +178,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs"), "DeclDefs")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs"), "DeclDefs")(p);
                 memo[tuple(`DeclDefs`,p.end)] = result;
                 return result;
             }
@@ -510,12 +189,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs"), "DeclDefs")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, DeclDef, Spacing)), "D.DeclDefs"), "DeclDefs")(TParseTree("", false,[], s));
         }
     }
     static string DeclDefs(GetName g)
@@ -527,7 +206,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef")(p);
+            return         pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef")(p);
         }
         else
         {
@@ -535,7 +214,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef"), "DeclDef")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef"), "DeclDef")(p);
                 memo[tuple(`DeclDef`,p.end)] = result;
                 return result;
             }
@@ -546,12 +225,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef"), "DeclDef")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Declaration, Spacing), "D.DeclDef"), "DeclDef")(TParseTree("", false,[], s));
         }
     }
     static string DeclDef(GetName g)
@@ -563,7 +242,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration")(p);
+            return         pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration")(p);
         }
         else
         {
@@ -571,7 +250,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration"), "Declaration")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration"), "Declaration")(p);
                 memo[tuple(`Declaration`,p.end)] = result;
                 return result;
             }
@@ -582,12 +261,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration"), "Declaration")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.wrapAround!(Spacing, Decl, Spacing), "D.Declaration"), "Declaration")(TParseTree("", false,[], s));
         }
     }
     static string Declaration(GetName g)
@@ -599,7 +278,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing))), "D.Decl")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing)), Spacing)), "D.Decl")(p);
         }
         else
         {
@@ -607,7 +286,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing))), "D.Decl"), "Decl")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing)), Spacing)), "D.Decl"), "Decl")(p);
                 memo[tuple(`Decl`,p.end)] = result;
                 return result;
             }
@@ -618,12 +297,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing))), "D.Decl")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing)), Spacing)), "D.Decl")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing))), "D.Decl"), "Decl")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, StorageClasses, Spacing), pegged.peg.wrapAround!(Spacing, Decl, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarators, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, FunctionBody, Spacing)), Spacing)), "D.Decl"), "Decl")(TParseTree("", false,[], s));
         }
     }
     static string Decl(GetName g)
@@ -635,7 +314,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType")(p);
         }
         else
         {
@@ -643,7 +322,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType"), "BasicType")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType"), "BasicType")(p);
                 memo[tuple(`BasicType`,p.end)] = result;
                 return result;
             }
@@ -654,12 +333,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType"), "BasicType")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(BasicTypeX, IdentifierList), "D.BasicType"), "BasicType")(TParseTree("", false,[], s));
         }
     }
     static string BasicType(GetName g)
@@ -671,7 +350,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX")(p);
+            return         pegged.peg.defined!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX")(p);
         }
         else
         {
@@ -679,7 +358,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX"), "BasicTypeX")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX"), "BasicTypeX")(p);
                 memo[tuple(`BasicTypeX`,p.end)] = result;
                 return result;
             }
@@ -690,12 +369,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX"), "BasicTypeX")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.keywords!("bool", "byte", "ubyte", "short", "ushort", "int", "uint", "long", "ulong", "char", "wchar", "dchar", "float", "double", "real", "ifloat", "idouble", "ireal", "cfloat", "cdouble", "creal", "void"), "D.BasicTypeX"), "BasicTypeX")(TParseTree("", false,[], s));
         }
     }
     static string BasicTypeX(GetName g)
@@ -707,7 +386,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Identifier, "D.IdentifierList")(p);
+            return         pegged.peg.defined!(Identifier, "D.IdentifierList")(p);
         }
         else
         {
@@ -715,7 +394,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(Identifier, "D.IdentifierList"), "IdentifierList")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(Identifier, "D.IdentifierList"), "IdentifierList")(p);
                 memo[tuple(`IdentifierList`,p.end)] = result;
                 return result;
             }
@@ -726,12 +405,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Identifier, "D.IdentifierList")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(Identifier, "D.IdentifierList")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(Identifier, "D.IdentifierList"), "IdentifierList")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(Identifier, "D.IdentifierList"), "IdentifierList")(TParseTree("", false,[], s));
         }
     }
     static string IdentifierList(GetName g)
@@ -743,7 +422,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses")(p);
         }
         else
         {
@@ -751,7 +430,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses"), "StorageClasses")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses"), "StorageClasses")(p);
                 memo[tuple(`StorageClasses`,p.end)] = result;
                 return result;
             }
@@ -762,12 +441,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses"), "StorageClasses")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(StorageClass), "D.StorageClasses"), "StorageClasses")(TParseTree("", false,[], s));
         }
     }
     static string StorageClasses(GetName g)
@@ -779,7 +458,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Extern, "D.StorageClass")(p);
+            return         pegged.peg.defined!(Extern, "D.StorageClass")(p);
         }
         else
         {
@@ -787,7 +466,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(Extern, "D.StorageClass"), "StorageClass")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(Extern, "D.StorageClass"), "StorageClass")(p);
                 memo[tuple(`StorageClass`,p.end)] = result;
                 return result;
             }
@@ -798,12 +477,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Extern, "D.StorageClass")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(Extern, "D.StorageClass")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(Extern, "D.StorageClass"), "StorageClass")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(Extern, "D.StorageClass"), "StorageClass")(TParseTree("", false,[], s));
         }
     }
     static string StorageClass(GetName g)
@@ -815,7 +494,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern")(p);
         }
         else
         {
@@ -823,7 +502,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern"), "Extern")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern"), "Extern")(p);
                 memo[tuple(`Extern`,p.end)] = result;
                 return result;
             }
@@ -834,12 +513,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern"), "Extern")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.literal!("extern"), pegged.peg.option!(pegged.peg.and!(pegged.peg.literal!("("), LinkageType, pegged.peg.literal!(")")))), "D.Extern"), "Extern")(TParseTree("", false,[], s));
         }
     }
     static string Extern(GetName g)
@@ -851,7 +530,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("C"), "D.LinkageType")(p);
+            return         pegged.peg.defined!(pegged.peg.literal!("C"), "D.LinkageType")(p);
         }
         else
         {
@@ -859,7 +538,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.literal!("C"), "D.LinkageType"), "LinkageType")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.literal!("C"), "D.LinkageType"), "LinkageType")(p);
                 memo[tuple(`LinkageType`,p.end)] = result;
                 return result;
             }
@@ -870,12 +549,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("C"), "D.LinkageType")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.literal!("C"), "D.LinkageType")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.literal!("C"), "D.LinkageType"), "LinkageType")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.literal!("C"), "D.LinkageType"), "LinkageType")(TParseTree("", false,[], s));
         }
     }
     static string LinkageType(GetName g)
@@ -887,7 +566,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator")(p);
         }
         else
         {
@@ -895,7 +574,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator"), "Declarator")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator"), "Declarator")(p);
                 memo[tuple(`Declarator`,p.end)] = result;
                 return result;
             }
@@ -906,12 +585,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator"), "Declarator")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, BasicType2, Spacing)), pegged.peg.wrapAround!(Spacing, Identifier, Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, DeclaratorSuffixes, Spacing))), "D.Declarator"), "Declarator")(TParseTree("", false,[], s));
         }
     }
     static string Declarator(GetName g)
@@ -923,7 +602,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes")(p);
         }
         else
         {
@@ -931,7 +610,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes"), "DeclaratorSuffixes")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes"), "DeclaratorSuffixes")(p);
                 memo[tuple(`DeclaratorSuffixes`,p.end)] = result;
                 return result;
             }
@@ -942,12 +621,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes"), "DeclaratorSuffixes")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(DeclaratorSuffix), "D.DeclaratorSuffixes"), "DeclaratorSuffixes")(TParseTree("", false,[], s));
         }
     }
     static string DeclaratorSuffixes(GetName g)
@@ -959,7 +638,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Parameters, "D.DeclaratorSuffix")(p);
+            return         pegged.peg.defined!(Parameters, "D.DeclaratorSuffix")(p);
         }
         else
         {
@@ -967,7 +646,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(Parameters, "D.DeclaratorSuffix"), "DeclaratorSuffix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(Parameters, "D.DeclaratorSuffix"), "DeclaratorSuffix")(p);
                 memo[tuple(`DeclaratorSuffix`,p.end)] = result;
                 return result;
             }
@@ -978,12 +657,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Parameters, "D.DeclaratorSuffix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(Parameters, "D.DeclaratorSuffix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(Parameters, "D.DeclaratorSuffix"), "DeclaratorSuffix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(Parameters, "D.DeclaratorSuffix"), "DeclaratorSuffix")(TParseTree("", false,[], s));
         }
     }
     static string DeclaratorSuffix(GetName g)
@@ -995,7 +674,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters")(p);
         }
         else
         {
@@ -1003,7 +682,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters"), "Parameters")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters"), "Parameters")(p);
                 memo[tuple(`Parameters`,p.end)] = result;
                 return result;
             }
@@ -1014,12 +693,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters"), "Parameters")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("("), Spacing)), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, ParameterList, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(")"), Spacing))), "D.Parameters"), "Parameters")(TParseTree("", false,[], s));
         }
     }
     static string Parameters(GetName g)
@@ -1031,7 +710,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList")(p);
         }
         else
         {
@@ -1039,7 +718,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList"), "ParameterList")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList"), "ParameterList")(p);
                 memo[tuple(`ParameterList`,p.end)] = result;
                 return result;
             }
@@ -1050,12 +729,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList"), "ParameterList")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.zeroOrMore!(pegged.peg.wrapAround!(Spacing, pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(","), Spacing)), pegged.peg.wrapAround!(Spacing, pegged.peg.or!(pegged.peg.wrapAround!(Spacing, Parameter, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), Spacing)), Spacing))), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("..."), Spacing)), "D.ParameterList"), "ParameterList")(TParseTree("", false,[], s));
         }
     }
     static string ParameterList(GetName g)
@@ -1067,7 +746,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter")(p);
         }
         else
         {
@@ -1075,7 +754,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter"), "Parameter")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter"), "Parameter")(p);
                 memo[tuple(`Parameter`,p.end)] = result;
                 return result;
             }
@@ -1086,12 +765,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter"), "Parameter")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.wrapAround!(Spacing, InOut, Spacing)), pegged.peg.wrapAround!(Spacing, BasicType, Spacing), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.Parameter"), "Parameter")(TParseTree("", false,[], s));
         }
     }
     static string Parameter(GetName g)
@@ -1103,7 +782,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(InOutX, "D.InOut")(p);
+            return         pegged.peg.defined!(InOutX, "D.InOut")(p);
         }
         else
         {
@@ -1111,7 +790,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(InOutX, "D.InOut"), "InOut")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(InOutX, "D.InOut"), "InOut")(p);
                 memo[tuple(`InOut`,p.end)] = result;
                 return result;
             }
@@ -1122,12 +801,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(InOutX, "D.InOut")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(InOutX, "D.InOut")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(InOutX, "D.InOut"), "InOut")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(InOutX, "D.InOut"), "InOut")(TParseTree("", false,[], s));
         }
     }
     static string InOut(GetName g)
@@ -1139,7 +818,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("in"), "D.InOutX")(p);
+            return         pegged.peg.defined!(pegged.peg.literal!("in"), "D.InOutX")(p);
         }
         else
         {
@@ -1147,7 +826,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.literal!("in"), "D.InOutX"), "InOutX")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.literal!("in"), "D.InOutX"), "InOutX")(p);
                 memo[tuple(`InOutX`,p.end)] = result;
                 return result;
             }
@@ -1158,12 +837,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("in"), "D.InOutX")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.literal!("in"), "D.InOutX")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.literal!("in"), "D.InOutX"), "InOutX")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.literal!("in"), "D.InOutX"), "InOutX")(TParseTree("", false,[], s));
         }
     }
     static string InOutX(GetName g)
@@ -1175,7 +854,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(BasicType, Declarator2), "D.Type")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(BasicType, Declarator2), "D.Type")(p);
         }
         else
         {
@@ -1183,7 +862,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(BasicType, Declarator2), "D.Type"), "Type")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(BasicType, Declarator2), "D.Type"), "Type")(p);
                 memo[tuple(`Type`,p.end)] = result;
                 return result;
             }
@@ -1194,12 +873,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(BasicType, Declarator2), "D.Type")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(BasicType, Declarator2), "D.Type")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(BasicType, Declarator2), "D.Type"), "Type")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(BasicType, Declarator2), "D.Type"), "Type")(TParseTree("", false,[], s));
         }
     }
     static string Type(GetName g)
@@ -1211,7 +890,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2")(p);
         }
         else
         {
@@ -1219,7 +898,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2"), "Declarator2")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2"), "Declarator2")(p);
                 memo[tuple(`Declarator2`,p.end)] = result;
                 return result;
             }
@@ -1230,12 +909,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2"), "Declarator2")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(BasicType2), pegged.peg.option!(DeclaratorSuffixes)), "D.Declarator2"), "Declarator2")(TParseTree("", false,[], s));
         }
     }
     static string Declarator2(GetName g)
@@ -1247,7 +926,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("*"), "D.BasicType2")(p);
+            return         pegged.peg.defined!(pegged.peg.literal!("*"), "D.BasicType2")(p);
         }
         else
         {
@@ -1255,7 +934,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.literal!("*"), "D.BasicType2"), "BasicType2")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.literal!("*"), "D.BasicType2"), "BasicType2")(p);
                 memo[tuple(`BasicType2`,p.end)] = result;
                 return result;
             }
@@ -1266,12 +945,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("*"), "D.BasicType2")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.literal!("*"), "D.BasicType2")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.literal!("*"), "D.BasicType2"), "BasicType2")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.literal!("*"), "D.BasicType2"), "BasicType2")(TParseTree("", false,[], s));
         }
     }
     static string BasicType2(GetName g)
@@ -1283,7 +962,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(DeclaratorInitializer, "D.Declarators")(p);
+            return         pegged.peg.defined!(DeclaratorInitializer, "D.Declarators")(p);
         }
         else
         {
@@ -1291,7 +970,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(DeclaratorInitializer, "D.Declarators"), "Declarators")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(DeclaratorInitializer, "D.Declarators"), "Declarators")(p);
                 memo[tuple(`Declarators`,p.end)] = result;
                 return result;
             }
@@ -1302,12 +981,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(DeclaratorInitializer, "D.Declarators")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(DeclaratorInitializer, "D.Declarators")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(DeclaratorInitializer, "D.Declarators"), "Declarators")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(DeclaratorInitializer, "D.Declarators"), "Declarators")(TParseTree("", false,[], s));
         }
     }
     static string Declarators(GetName g)
@@ -1319,7 +998,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer")(p);
         }
         else
         {
@@ -1327,7 +1006,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer"), "DeclaratorInitializer")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer"), "DeclaratorInitializer")(p);
                 memo[tuple(`DeclaratorInitializer`,p.end)] = result;
                 return result;
             }
@@ -1338,12 +1017,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer"), "DeclaratorInitializer")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, Declarator, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("="), Spacing), pegged.peg.wrapAround!(Spacing, Initializer, Spacing)), pegged.peg.wrapAround!(Spacing, Declarator, Spacing)), "D.DeclaratorInitializer"), "DeclaratorInitializer")(TParseTree("", false,[], s));
         }
     }
     static string DeclaratorInitializer(GetName g)
@@ -1355,7 +1034,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(NonVoidInitializer, "D.Initializer")(p);
+            return         pegged.peg.defined!(NonVoidInitializer, "D.Initializer")(p);
         }
         else
         {
@@ -1363,7 +1042,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(NonVoidInitializer, "D.Initializer"), "Initializer")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(NonVoidInitializer, "D.Initializer"), "Initializer")(p);
                 memo[tuple(`Initializer`,p.end)] = result;
                 return result;
             }
@@ -1374,12 +1053,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(NonVoidInitializer, "D.Initializer")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(NonVoidInitializer, "D.Initializer")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(NonVoidInitializer, "D.Initializer"), "Initializer")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(NonVoidInitializer, "D.Initializer"), "Initializer")(TParseTree("", false,[], s));
         }
     }
     static string Initializer(GetName g)
@@ -1391,7 +1070,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AssignExpression, "D.NonVoidInitializer")(p);
+            return         pegged.peg.defined!(AssignExpression, "D.NonVoidInitializer")(p);
         }
         else
         {
@@ -1399,7 +1078,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(AssignExpression, "D.NonVoidInitializer"), "NonVoidInitializer")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(AssignExpression, "D.NonVoidInitializer"), "NonVoidInitializer")(p);
                 memo[tuple(`NonVoidInitializer`,p.end)] = result;
                 return result;
             }
@@ -1410,12 +1089,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AssignExpression, "D.NonVoidInitializer")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(AssignExpression, "D.NonVoidInitializer")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(AssignExpression, "D.NonVoidInitializer"), "NonVoidInitializer")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(AssignExpression, "D.NonVoidInitializer"), "NonVoidInitializer")(TParseTree("", false,[], s));
         }
     }
     static string NonVoidInitializer(GetName g)
@@ -1427,7 +1106,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(ConditionalExpression, "D.AssignExpression")(p);
+            return         pegged.peg.defined!(ConditionalExpression, "D.AssignExpression")(p);
         }
         else
         {
@@ -1435,7 +1114,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(ConditionalExpression, "D.AssignExpression"), "AssignExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(ConditionalExpression, "D.AssignExpression"), "AssignExpression")(p);
                 memo[tuple(`AssignExpression`,p.end)] = result;
                 return result;
             }
@@ -1446,12 +1125,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(ConditionalExpression, "D.AssignExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(ConditionalExpression, "D.AssignExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(ConditionalExpression, "D.AssignExpression"), "AssignExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(ConditionalExpression, "D.AssignExpression"), "AssignExpression")(TParseTree("", false,[], s));
         }
     }
     static string AssignExpression(GetName g)
@@ -1463,7 +1142,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(OrOrExpression, "D.ConditionalExpression")(p);
+            return         pegged.peg.defined!(OrOrExpression, "D.ConditionalExpression")(p);
         }
         else
         {
@@ -1471,7 +1150,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(OrOrExpression, "D.ConditionalExpression"), "ConditionalExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(OrOrExpression, "D.ConditionalExpression"), "ConditionalExpression")(p);
                 memo[tuple(`ConditionalExpression`,p.end)] = result;
                 return result;
             }
@@ -1482,12 +1161,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(OrOrExpression, "D.ConditionalExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(OrOrExpression, "D.ConditionalExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(OrOrExpression, "D.ConditionalExpression"), "ConditionalExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(OrOrExpression, "D.ConditionalExpression"), "ConditionalExpression")(TParseTree("", false,[], s));
         }
     }
     static string ConditionalExpression(GetName g)
@@ -1499,7 +1178,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AndAndExpression, "D.OrOrExpression")(p);
+            return         pegged.peg.defined!(AndAndExpression, "D.OrOrExpression")(p);
         }
         else
         {
@@ -1507,7 +1186,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(AndAndExpression, "D.OrOrExpression"), "OrOrExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(AndAndExpression, "D.OrOrExpression"), "OrOrExpression")(p);
                 memo[tuple(`OrOrExpression`,p.end)] = result;
                 return result;
             }
@@ -1518,12 +1197,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AndAndExpression, "D.OrOrExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(AndAndExpression, "D.OrOrExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(AndAndExpression, "D.OrOrExpression"), "OrOrExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(AndAndExpression, "D.OrOrExpression"), "OrOrExpression")(TParseTree("", false,[], s));
         }
     }
     static string OrOrExpression(GetName g)
@@ -1535,7 +1214,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(OrExpression, "D.AndAndExpression")(p);
+            return         pegged.peg.defined!(OrExpression, "D.AndAndExpression")(p);
         }
         else
         {
@@ -1543,7 +1222,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(OrExpression, "D.AndAndExpression"), "AndAndExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(OrExpression, "D.AndAndExpression"), "AndAndExpression")(p);
                 memo[tuple(`AndAndExpression`,p.end)] = result;
                 return result;
             }
@@ -1554,12 +1233,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(OrExpression, "D.AndAndExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(OrExpression, "D.AndAndExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(OrExpression, "D.AndAndExpression"), "AndAndExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(OrExpression, "D.AndAndExpression"), "AndAndExpression")(TParseTree("", false,[], s));
         }
     }
     static string AndAndExpression(GetName g)
@@ -1571,7 +1250,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(XorExpression, "D.OrExpression")(p);
+            return         pegged.peg.defined!(XorExpression, "D.OrExpression")(p);
         }
         else
         {
@@ -1579,7 +1258,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(XorExpression, "D.OrExpression"), "OrExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(XorExpression, "D.OrExpression"), "OrExpression")(p);
                 memo[tuple(`OrExpression`,p.end)] = result;
                 return result;
             }
@@ -1590,12 +1269,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(XorExpression, "D.OrExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(XorExpression, "D.OrExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(XorExpression, "D.OrExpression"), "OrExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(XorExpression, "D.OrExpression"), "OrExpression")(TParseTree("", false,[], s));
         }
     }
     static string OrExpression(GetName g)
@@ -1607,7 +1286,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AndExpression, "D.XorExpression")(p);
+            return         pegged.peg.defined!(AndExpression, "D.XorExpression")(p);
         }
         else
         {
@@ -1615,7 +1294,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(AndExpression, "D.XorExpression"), "XorExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(AndExpression, "D.XorExpression"), "XorExpression")(p);
                 memo[tuple(`XorExpression`,p.end)] = result;
                 return result;
             }
@@ -1626,12 +1305,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AndExpression, "D.XorExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(AndExpression, "D.XorExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(AndExpression, "D.XorExpression"), "XorExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(AndExpression, "D.XorExpression"), "XorExpression")(TParseTree("", false,[], s));
         }
     }
     static string XorExpression(GetName g)
@@ -1643,7 +1322,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(ShiftExpression, "D.AndExpression")(p);
+            return         pegged.peg.defined!(ShiftExpression, "D.AndExpression")(p);
         }
         else
         {
@@ -1651,7 +1330,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(ShiftExpression, "D.AndExpression"), "AndExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(ShiftExpression, "D.AndExpression"), "AndExpression")(p);
                 memo[tuple(`AndExpression`,p.end)] = result;
                 return result;
             }
@@ -1662,12 +1341,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(ShiftExpression, "D.AndExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(ShiftExpression, "D.AndExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(ShiftExpression, "D.AndExpression"), "AndExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(ShiftExpression, "D.AndExpression"), "AndExpression")(TParseTree("", false,[], s));
         }
     }
     static string AndExpression(GetName g)
@@ -1679,7 +1358,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AddExpression, "D.ShiftExpression")(p);
+            return         pegged.peg.defined!(AddExpression, "D.ShiftExpression")(p);
         }
         else
         {
@@ -1687,7 +1366,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(AddExpression, "D.ShiftExpression"), "ShiftExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(AddExpression, "D.ShiftExpression"), "ShiftExpression")(p);
                 memo[tuple(`ShiftExpression`,p.end)] = result;
                 return result;
             }
@@ -1698,12 +1377,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AddExpression, "D.ShiftExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(AddExpression, "D.ShiftExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(AddExpression, "D.ShiftExpression"), "ShiftExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(AddExpression, "D.ShiftExpression"), "ShiftExpression")(TParseTree("", false,[], s));
         }
     }
     static string ShiftExpression(GetName g)
@@ -1715,7 +1394,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression")(p);
         }
         else
         {
@@ -1723,7 +1402,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression"), "AddExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression"), "AddExpression")(p);
                 memo[tuple(`AddExpression`,p.end)] = result;
                 return result;
             }
@@ -1734,12 +1413,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression"), "AddExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, MulExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, AddExpression, Spacing)), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), "D.AddExpression"), "AddExpression")(TParseTree("", false,[], s));
         }
     }
     static string AddExpression(GetName g)
@@ -1751,7 +1430,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression")(p);
         }
         else
         {
@@ -1759,7 +1438,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression"), "MulExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression"), "MulExpression")(p);
                 memo[tuple(`MulExpression`,p.end)] = result;
                 return result;
             }
@@ -1770,12 +1449,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression"), "MulExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("*"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("/"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("%"), Spacing), pegged.peg.wrapAround!(Spacing, MulExpression, Spacing)), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), "D.MulExpression"), "MulExpression")(TParseTree("", false,[], s));
         }
     }
     static string MulExpression(GetName g)
@@ -1787,7 +1466,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression")(p);
         }
         else
         {
@@ -1795,7 +1474,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression"), "UnaryExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression"), "UnaryExpression")(p);
                 memo[tuple(`UnaryExpression`,p.end)] = result;
                 return result;
             }
@@ -1806,12 +1485,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression"), "UnaryExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("-"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("+"), Spacing), pegged.peg.wrapAround!(Spacing, UnaryExpression, Spacing)), pegged.peg.wrapAround!(Spacing, PowExpression, Spacing)), "D.UnaryExpression"), "UnaryExpression")(TParseTree("", false,[], s));
         }
     }
     static string UnaryExpression(GetName g)
@@ -1823,7 +1502,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(PostfixExpression, "D.PowExpression")(p);
+            return         pegged.peg.defined!(PostfixExpression, "D.PowExpression")(p);
         }
         else
         {
@@ -1831,7 +1510,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(PostfixExpression, "D.PowExpression"), "PowExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(PostfixExpression, "D.PowExpression"), "PowExpression")(p);
                 memo[tuple(`PowExpression`,p.end)] = result;
                 return result;
             }
@@ -1842,12 +1521,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(PostfixExpression, "D.PowExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(PostfixExpression, "D.PowExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(PostfixExpression, "D.PowExpression"), "PowExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(PostfixExpression, "D.PowExpression"), "PowExpression")(TParseTree("", false,[], s));
         }
     }
     static string PowExpression(GetName g)
@@ -1859,7 +1538,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(PrimaryExpression, "D.PostfixExpression")(p);
+            return         pegged.peg.defined!(PrimaryExpression, "D.PostfixExpression")(p);
         }
         else
         {
@@ -1867,7 +1546,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(PrimaryExpression, "D.PostfixExpression"), "PostfixExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(PrimaryExpression, "D.PostfixExpression"), "PostfixExpression")(p);
                 memo[tuple(`PostfixExpression`,p.end)] = result;
                 return result;
             }
@@ -1878,12 +1557,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(PrimaryExpression, "D.PostfixExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(PrimaryExpression, "D.PostfixExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(PrimaryExpression, "D.PostfixExpression"), "PostfixExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(PrimaryExpression, "D.PostfixExpression"), "PostfixExpression")(TParseTree("", false,[], s));
         }
     }
     static string PostfixExpression(GetName g)
@@ -1895,7 +1574,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression")(p);
         }
         else
         {
@@ -1903,7 +1582,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression"), "PrimaryExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression"), "PrimaryExpression")(p);
                 memo[tuple(`PrimaryExpression`,p.end)] = result;
                 return result;
             }
@@ -1914,12 +1593,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression"), "PrimaryExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(FloatLiteral, IntegerLiteral, StringLiteral, CharacterLiteral, pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("(")), Expression, pegged.peg.discard!(pegged.peg.literal!(")")))), "D.PrimaryExpression"), "PrimaryExpression")(TParseTree("", false,[], s));
         }
     }
     static string PrimaryExpression(GetName g)
@@ -1931,7 +1610,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(identifier, "D.Identifier")(p);
+            return         pegged.peg.defined!(identifier, "D.Identifier")(p);
         }
         else
         {
@@ -1939,7 +1618,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(identifier, "D.Identifier"), "Identifier")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(identifier, "D.Identifier"), "Identifier")(p);
                 memo[tuple(`Identifier`,p.end)] = result;
                 return result;
             }
@@ -1950,12 +1629,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(identifier, "D.Identifier")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(identifier, "D.Identifier")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(identifier, "D.Identifier"), "Identifier")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(identifier, "D.Identifier"), "Identifier")(TParseTree("", false,[], s));
         }
     }
     static string Identifier(GetName g)
@@ -1967,7 +1646,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(BlockStatement, "D.FunctionBody")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(BlockStatement, BodyStatement), "D.FunctionBody")(p);
         }
         else
         {
@@ -1975,7 +1654,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(BlockStatement, "D.FunctionBody"), "FunctionBody")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(BlockStatement, BodyStatement), "D.FunctionBody"), "FunctionBody")(p);
                 memo[tuple(`FunctionBody`,p.end)] = result;
                 return result;
             }
@@ -1986,12 +1665,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(BlockStatement, "D.FunctionBody")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(BlockStatement, BodyStatement), "D.FunctionBody")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(BlockStatement, "D.FunctionBody"), "FunctionBody")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(BlockStatement, BodyStatement), "D.FunctionBody"), "FunctionBody")(TParseTree("", false,[], s));
         }
     }
     static string FunctionBody(GetName g)
@@ -1999,11 +1678,47 @@ struct GenericD(TParseTree)
         return "D.FunctionBody";
     }
 
+    static TParseTree BodyStatement(TParseTree p)
+    {
+        if(__ctfe)
+        {
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("body"), Spacing), pegged.peg.wrapAround!(Spacing, BlockStatement, Spacing)), "D.BodyStatement")(p);
+        }
+        else
+        {
+            if(auto m = tuple(`BodyStatement`,p.end) in memo)
+                return *m;
+            else
+            {
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("body"), Spacing), pegged.peg.wrapAround!(Spacing, BlockStatement, Spacing)), "D.BodyStatement"), "BodyStatement")(p);
+                memo[tuple(`BodyStatement`,p.end)] = result;
+                return result;
+            }
+        }
+    }
+
+    static TParseTree BodyStatement(string s)
+    {
+        if(__ctfe)
+        {
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("body"), Spacing), pegged.peg.wrapAround!(Spacing, BlockStatement, Spacing)), "D.BodyStatement")(TParseTree("", false,[], s));
+        }
+        else
+        {
+            memo = null;
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("body"), Spacing), pegged.peg.wrapAround!(Spacing, BlockStatement, Spacing)), "D.BodyStatement"), "BodyStatement")(TParseTree("", false,[], s));
+        }
+    }
+    static string BodyStatement(GetName g)
+    {
+        return "D.BodyStatement";
+    }
+
     static TParseTree BlockStatement(TParseTree p)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement")(p);
         }
         else
         {
@@ -2011,7 +1726,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement"), "BlockStatement")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement"), "BlockStatement")(p);
                 memo[tuple(`BlockStatement`,p.end)] = result;
                 return result;
             }
@@ -2022,12 +1737,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement"), "BlockStatement")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing), pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)), pegged.peg.and!(pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("{"), Spacing)), pegged.peg.wrapAround!(Spacing, StatementList, Spacing), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("}"), Spacing)))), "D.BlockStatement"), "BlockStatement")(TParseTree("", false,[], s));
         }
     }
     static string BlockStatement(GetName g)
@@ -2039,7 +1754,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(Statement), "D.StatementList")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(Statement), "D.StatementList")(p);
         }
         else
         {
@@ -2047,7 +1762,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(Statement), "D.StatementList"), "StatementList")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(Statement), "D.StatementList"), "StatementList")(p);
                 memo[tuple(`StatementList`,p.end)] = result;
                 return result;
             }
@@ -2058,12 +1773,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(Statement), "D.StatementList")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(Statement), "D.StatementList")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(Statement), "D.StatementList"), "StatementList")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(Statement), "D.StatementList"), "StatementList")(TParseTree("", false,[], s));
         }
     }
     static string StatementList(GetName g)
@@ -2075,7 +1790,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement")(p);
         }
         else
         {
@@ -2083,7 +1798,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement"), "Statement")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement"), "Statement")(p);
                 memo[tuple(`Statement`,p.end)] = result;
                 return result;
             }
@@ -2094,12 +1809,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement"), "Statement")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(";"), NonEmptyStatement), "D.Statement"), "Statement")(TParseTree("", false,[], s));
         }
     }
     static string Statement(GetName g)
@@ -2111,7 +1826,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement")(p);
+            return         pegged.peg.defined!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement")(p);
         }
         else
         {
@@ -2119,7 +1834,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement"), "NonEmptyStatement")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement"), "NonEmptyStatement")(p);
                 memo[tuple(`NonEmptyStatement`,p.end)] = result;
                 return result;
             }
@@ -2130,12 +1845,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement"), "NonEmptyStatement")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(NonEmptyStatementNoCaseNoDefault, "D.NonEmptyStatement"), "NonEmptyStatement")(TParseTree("", false,[], s));
         }
     }
     static string NonEmptyStatement(GetName g)
@@ -2147,7 +1862,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault")(p);
         }
         else
         {
@@ -2155,7 +1870,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault"), "NonEmptyStatementNoCaseNoDefault")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault"), "NonEmptyStatementNoCaseNoDefault")(p);
                 memo[tuple(`NonEmptyStatementNoCaseNoDefault`,p.end)] = result;
                 return result;
             }
@@ -2166,12 +1881,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault"), "NonEmptyStatementNoCaseNoDefault")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(DeclarationStatement, ReturnStatement), "D.NonEmptyStatementNoCaseNoDefault"), "NonEmptyStatementNoCaseNoDefault")(TParseTree("", false,[], s));
         }
     }
     static string NonEmptyStatementNoCaseNoDefault(GetName g)
@@ -2183,7 +1898,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Declaration, "D.DeclarationStatement")(p);
+            return         pegged.peg.defined!(Declaration, "D.DeclarationStatement")(p);
         }
         else
         {
@@ -2191,7 +1906,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(Declaration, "D.DeclarationStatement"), "DeclarationStatement")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(Declaration, "D.DeclarationStatement"), "DeclarationStatement")(p);
                 memo[tuple(`DeclarationStatement`,p.end)] = result;
                 return result;
             }
@@ -2202,12 +1917,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(Declaration, "D.DeclarationStatement")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(Declaration, "D.DeclarationStatement")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(Declaration, "D.DeclarationStatement"), "DeclarationStatement")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(Declaration, "D.DeclarationStatement"), "DeclarationStatement")(TParseTree("", false,[], s));
         }
     }
     static string DeclarationStatement(GetName g)
@@ -2219,7 +1934,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement")(p);
         }
         else
         {
@@ -2227,7 +1942,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement"), "ReturnStatement")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement"), "ReturnStatement")(p);
                 memo[tuple(`ReturnStatement`,p.end)] = result;
                 return result;
             }
@@ -2238,12 +1953,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement"), "ReturnStatement")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!("return"), Spacing), pegged.peg.option!(pegged.peg.wrapAround!(Spacing, Expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, pegged.peg.literal!(";"), Spacing))), "D.ReturnStatement"), "ReturnStatement")(TParseTree("", false,[], s));
         }
     }
     static string ReturnStatement(GetName g)
@@ -2255,7 +1970,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(CommaExpression, "D.Expression")(p);
+            return         pegged.peg.defined!(CommaExpression, "D.Expression")(p);
         }
         else
         {
@@ -2263,7 +1978,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(CommaExpression, "D.Expression"), "Expression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(CommaExpression, "D.Expression"), "Expression")(p);
                 memo[tuple(`Expression`,p.end)] = result;
                 return result;
             }
@@ -2274,12 +1989,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(CommaExpression, "D.Expression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(CommaExpression, "D.Expression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(CommaExpression, "D.Expression"), "Expression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(CommaExpression, "D.Expression"), "Expression")(TParseTree("", false,[], s));
         }
     }
     static string Expression(GetName g)
@@ -2291,7 +2006,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AssignExpression, "D.CommaExpression")(p);
+            return         pegged.peg.defined!(AssignExpression, "D.CommaExpression")(p);
         }
         else
         {
@@ -2299,7 +2014,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(AssignExpression, "D.CommaExpression"), "CommaExpression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(AssignExpression, "D.CommaExpression"), "CommaExpression")(p);
                 memo[tuple(`CommaExpression`,p.end)] = result;
                 return result;
             }
@@ -2310,12 +2025,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(AssignExpression, "D.CommaExpression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(AssignExpression, "D.CommaExpression")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(AssignExpression, "D.CommaExpression"), "CommaExpression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(AssignExpression, "D.CommaExpression"), "CommaExpression")(TParseTree("", false,[], s));
         }
     }
     static string CommaExpression(GetName g)
@@ -2327,7 +2042,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing")(p);
+            return         pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing")(p);
         }
         else
         {
@@ -2335,7 +2050,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing"), "Spacing")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing"), "Spacing")(p);
                 memo[tuple(`Spacing`,p.end)] = result;
                 return result;
             }
@@ -2346,12 +2061,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing"), "Spacing")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.zeroOrMore!(pegged.peg.or!(Comment, spacing)), "D.Spacing"), "Spacing")(TParseTree("", false,[], s));
         }
     }
     static string Spacing(GetName g)
@@ -2363,7 +2078,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space")(p);
         }
         else
         {
@@ -2371,7 +2086,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space"), "Space")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space"), "Space")(p);
                 memo[tuple(`Space`,p.end)] = result;
                 return result;
             }
@@ -2382,12 +2097,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space"), "Space")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\u0020"), pegged.peg.literal!("\u0009"), pegged.peg.literal!("\u000b"), pegged.peg.literal!("\u000c"), eol), "D.Space"), "Space")(TParseTree("", false,[], s));
         }
     }
     static string Space(GetName g)
@@ -2399,7 +2114,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment")(p);
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment")(p);
         }
         else
         {
@@ -2407,7 +2122,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment"), "Comment")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment"), "Comment")(p);
                 memo[tuple(`Comment`,p.end)] = result;
                 return result;
             }
@@ -2418,12 +2133,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment"), "Comment")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(BlockComment, LineComment, NestingBlockComment)), "D.Comment"), "Comment")(TParseTree("", false,[], s));
         }
     }
     static string Comment(GetName g)
@@ -2435,7 +2150,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment")(p);
         }
         else
         {
@@ -2443,7 +2158,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment"), "BlockComment")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment"), "BlockComment")(p);
                 memo[tuple(`BlockComment`,p.end)] = result;
                 return result;
             }
@@ -2454,12 +2169,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment"), "BlockComment")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/*")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.literal!("*/")), pegged.peg.any)), pegged.peg.discard!(pegged.peg.literal!("*/")))), "D.BlockComment"), "BlockComment")(TParseTree("", false,[], s));
         }
     }
     static string BlockComment(GetName g)
@@ -2471,7 +2186,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment")(p);
         }
         else
         {
@@ -2479,7 +2194,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment"), "LineComment")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment"), "LineComment")(p);
                 memo[tuple(`LineComment`,p.end)] = result;
                 return result;
             }
@@ -2490,12 +2205,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment"), "LineComment")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("//")), pegged.peg.zeroOrMore!(pegged.peg.and!(pegged.peg.negLookahead!(eol), pegged.peg.any)), pegged.peg.discard!(eol))), "D.LineComment"), "LineComment")(TParseTree("", false,[], s));
         }
     }
     static string LineComment(GetName g)
@@ -2507,7 +2222,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment")(p);
         }
         else
         {
@@ -2515,7 +2230,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment"), "NestingBlockComment")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment"), "NestingBlockComment")(p);
                 memo[tuple(`NestingBlockComment`,p.end)] = result;
                 return result;
             }
@@ -2526,12 +2241,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment"), "NestingBlockComment")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(pegged.peg.discard!(pegged.peg.literal!("/+")), pegged.peg.zeroOrMore!(pegged.peg.or!(NestingBlockComment, pegged.peg.and!(pegged.peg.negLookahead!(pegged.peg.keywords!("+/", "/+")), pegged.peg.any))), pegged.peg.discard!(pegged.peg.literal!("+/")))), "D.NestingBlockComment"), "NestingBlockComment")(TParseTree("", false,[], s));
         }
     }
     static string NestingBlockComment(GetName g)
@@ -2543,7 +2258,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(DoubleQuotedString, "D.StringLiteral")(p);
+            return         pegged.peg.defined!(DoubleQuotedString, "D.StringLiteral")(p);
         }
         else
         {
@@ -2551,7 +2266,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(DoubleQuotedString, "D.StringLiteral"), "StringLiteral")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(DoubleQuotedString, "D.StringLiteral"), "StringLiteral")(p);
                 memo[tuple(`StringLiteral`,p.end)] = result;
                 return result;
             }
@@ -2562,12 +2277,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(DoubleQuotedString, "D.StringLiteral")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(DoubleQuotedString, "D.StringLiteral")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(DoubleQuotedString, "D.StringLiteral"), "StringLiteral")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(DoubleQuotedString, "D.StringLiteral"), "StringLiteral")(TParseTree("", false,[], s));
         }
     }
     static string StringLiteral(GetName g)
@@ -2579,7 +2294,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString")(p);
         }
         else
         {
@@ -2587,7 +2302,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString"), "DoubleQuotedString")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString"), "DoubleQuotedString")(p);
                 memo[tuple(`DoubleQuotedString`,p.end)] = result;
                 return result;
             }
@@ -2598,12 +2313,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString"), "DoubleQuotedString")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.discard!(doublequote), pegged.peg.literal!(``), pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix)), pegged.peg.and!(pegged.peg.discard!(doublequote), DoubleQuotedCharacters, pegged.peg.discard!(doublequote), pegged.peg.option!(StringPostfix))), "D.DoubleQuotedString"), "DoubleQuotedString")(TParseTree("", false,[], s));
         }
     }
     static string DoubleQuotedString(GetName g)
@@ -2615,7 +2330,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters")(p);
         }
         else
         {
@@ -2623,7 +2338,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters"), "DoubleQuotedCharacters")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters"), "DoubleQuotedCharacters")(p);
                 memo[tuple(`DoubleQuotedCharacters`,p.end)] = result;
                 return result;
             }
@@ -2634,12 +2349,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters"), "DoubleQuotedCharacters")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.zeroOrMore!(DoubleQuotedCharacter)), "D.DoubleQuotedCharacters"), "DoubleQuotedCharacters")(TParseTree("", false,[], s));
         }
     }
     static string DoubleQuotedCharacters(GetName g)
@@ -2651,7 +2366,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter")(p);
         }
         else
         {
@@ -2659,7 +2374,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter"), "DoubleQuotedCharacter")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter"), "DoubleQuotedCharacter")(p);
                 memo[tuple(`DoubleQuotedCharacter`,p.end)] = result;
                 return result;
             }
@@ -2670,12 +2385,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter"), "DoubleQuotedCharacter")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(pegged.peg.negLookahead!(doublequote), Character), EscapeSequence, eol), "D.DoubleQuotedCharacter"), "DoubleQuotedCharacter")(TParseTree("", false,[], s));
         }
     }
     static string DoubleQuotedCharacter(GetName g)
@@ -2687,7 +2402,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence")(p);
         }
         else
         {
@@ -2695,7 +2410,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence"), "EscapeSequence")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence"), "EscapeSequence")(p);
                 memo[tuple(`EscapeSequence`,p.end)] = result;
                 return result;
             }
@@ -2706,12 +2421,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence"), "EscapeSequence")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\\'"), pegged.peg.literal!("\\f"), pegged.peg.literal!("\\n"), pegged.peg.literal!("\\r"), pegged.peg.literal!("\\t"), pegged.peg.literal!("\\v"), pegged.peg.and!(pegged.peg.literal!("\\x"), HexDigit, HexDigit), pegged.peg.and!(backslash, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit), pegged.peg.and!(backslash, OctalDigit, OctalDigit, OctalDigit), pegged.peg.and!(pegged.peg.literal!("\\u"), HexDigit, HexDigit, HexDigit, HexDigit), pegged.peg.and!(pegged.peg.literal!("\\U"), HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit, HexDigit)), "D.EscapeSequence"), "EscapeSequence")(TParseTree("", false,[], s));
         }
     }
     static string EscapeSequence(GetName g)
@@ -2723,7 +2438,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix")(p);
+            return         pegged.peg.defined!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix")(p);
         }
         else
         {
@@ -2731,7 +2446,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix"), "StringPostfix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix"), "StringPostfix")(p);
                 memo[tuple(`StringPostfix`,p.end)] = result;
                 return result;
             }
@@ -2742,12 +2457,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix"), "StringPostfix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.keywords!("c", "w", "d"), "D.StringPostfix"), "StringPostfix")(TParseTree("", false,[], s));
         }
     }
     static string StringPostfix(GetName g)
@@ -2759,7 +2474,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral")(p);
         }
         else
         {
@@ -2767,7 +2482,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral"), "CharacterLiteral")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral"), "CharacterLiteral")(p);
                 memo[tuple(`CharacterLiteral`,p.end)] = result;
                 return result;
             }
@@ -2778,12 +2493,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral"), "CharacterLiteral")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.discard!(quote), SingleQuotedCharacter, pegged.peg.discard!(quote)), "D.CharacterLiteral"), "CharacterLiteral")(TParseTree("", false,[], s));
         }
     }
     static string CharacterLiteral(GetName g)
@@ -2795,7 +2510,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter")(p);
         }
         else
         {
@@ -2803,7 +2518,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter"), "SingleQuotedCharacter")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter"), "SingleQuotedCharacter")(p);
                 memo[tuple(`SingleQuotedCharacter`,p.end)] = result;
                 return result;
             }
@@ -2814,12 +2529,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter"), "SingleQuotedCharacter")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(EscapeSequence, pegged.peg.and!(pegged.peg.negLookahead!(quote), Character)), "D.SingleQuotedCharacter"), "SingleQuotedCharacter")(TParseTree("", false,[], s));
         }
     }
     static string SingleQuotedCharacter(GetName g)
@@ -2831,7 +2546,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.any, "D.Character")(p);
+            return         pegged.peg.defined!(pegged.peg.any, "D.Character")(p);
         }
         else
         {
@@ -2839,7 +2554,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.any, "D.Character"), "Character")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.any, "D.Character"), "Character")(p);
                 memo[tuple(`Character`,p.end)] = result;
                 return result;
             }
@@ -2850,12 +2565,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.any, "D.Character")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.any, "D.Character")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.any, "D.Character"), "Character")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.any, "D.Character"), "Character")(TParseTree("", false,[], s));
         }
     }
     static string Character(GetName g)
@@ -2867,7 +2582,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral")(p);
         }
         else
         {
@@ -2875,7 +2590,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral"), "FloatLiteral")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral"), "FloatLiteral")(p);
                 memo[tuple(`FloatLiteral`,p.end)] = result;
                 return result;
             }
@@ -2886,12 +2601,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral"), "FloatLiteral")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(Float, pegged.peg.and!(Float, Suffix), pegged.peg.and!(Integer, FloatSuffix, pegged.peg.option!(ImaginarySuffix)), pegged.peg.and!(Integer, ImaginarySuffix), pegged.peg.and!(Integer, RealSuffix, ImaginarySuffix)), "D.FloatLiteral"), "FloatLiteral")(TParseTree("", false,[], s));
         }
     }
     static string FloatLiteral(GetName g)
@@ -2903,7 +2618,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float")(p);
         }
         else
         {
@@ -2911,7 +2626,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float"), "Float")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float"), "Float")(p);
                 memo[tuple(`Float`,p.end)] = result;
                 return result;
             }
@@ -2922,12 +2637,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float"), "Float")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalFloat, HexFloat), "D.Float"), "Float")(TParseTree("", false,[], s));
         }
     }
     static string Float(GetName g)
@@ -2939,7 +2654,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat")(p);
         }
         else
         {
@@ -2947,7 +2662,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat"), "DecimalFloat")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat"), "DecimalFloat")(p);
                 memo[tuple(`DecimalFloat`,p.end)] = result;
                 return result;
             }
@@ -2958,12 +2673,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat"), "DecimalFloat")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(LeadingDecimal, pegged.peg.literal!("."), pegged.peg.option!(DecimalDigits)), pegged.peg.and!(DecimalDigits, pegged.peg.literal!("."), DecimalDigitsNoSingleUS, DecimalExponent), pegged.peg.and!(pegged.peg.literal!("."), DecimalInteger, pegged.peg.option!(DecimalExponent)), pegged.peg.and!(LeadingDecimal, DecimalExponent))), "D.DecimalFloat"), "DecimalFloat")(TParseTree("", false,[], s));
         }
     }
     static string DecimalFloat(GetName g)
@@ -2975,7 +2690,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent")(p);
         }
         else
         {
@@ -2983,7 +2698,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent"), "DecimalExponent")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent"), "DecimalExponent")(p);
                 memo[tuple(`DecimalExponent`,p.end)] = result;
                 return result;
             }
@@ -2994,12 +2709,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent"), "DecimalExponent")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(DecimalExponentStart, DecimalDigitsNoSingleUS), "D.DecimalExponent"), "DecimalExponent")(TParseTree("", false,[], s));
         }
     }
     static string DecimalExponent(GetName g)
@@ -3011,7 +2726,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart")(p);
+            return         pegged.peg.defined!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart")(p);
         }
         else
         {
@@ -3019,7 +2734,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart"), "DecimalExponentStart")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart"), "DecimalExponentStart")(p);
                 memo[tuple(`DecimalExponentStart`,p.end)] = result;
                 return result;
             }
@@ -3030,12 +2745,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart"), "DecimalExponentStart")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.keywords!("e+", "E+", "e-", "E-", "e", "E"), "D.DecimalExponentStart"), "DecimalExponentStart")(TParseTree("", false,[], s));
         }
     }
     static string DecimalExponentStart(GetName g)
@@ -3047,7 +2762,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat")(p);
         }
         else
         {
@@ -3055,7 +2770,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat"), "HexFloat")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat"), "HexFloat")(p);
                 memo[tuple(`HexFloat`,p.end)] = result;
                 return result;
             }
@@ -3066,12 +2781,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat"), "HexFloat")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, pegged.peg.literal!("."), HexDigitsNoSingleUS, HexExponent), pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS, HexExponent)), "D.HexFloat"), "HexFloat")(TParseTree("", false,[], s));
         }
     }
     static string HexFloat(GetName g)
@@ -3083,7 +2798,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix")(p);
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix")(p);
         }
         else
         {
@@ -3091,7 +2806,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix"), "HexPrefix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix"), "HexPrefix")(p);
                 memo[tuple(`HexPrefix`,p.end)] = result;
                 return result;
             }
@@ -3102,12 +2817,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix"), "HexPrefix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0x", "0X")), "D.HexPrefix"), "HexPrefix")(TParseTree("", false,[], s));
         }
     }
     static string HexPrefix(GetName g)
@@ -3119,7 +2834,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent")(p);
         }
         else
         {
@@ -3127,7 +2842,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent"), "HexExponent")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent"), "HexExponent")(p);
                 memo[tuple(`HexExponent`,p.end)] = result;
                 return result;
             }
@@ -3138,12 +2853,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent"), "HexExponent")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(HexExponentStart, DecimalDigitsNoSingleUS), "D.HexExponent"), "HexExponent")(TParseTree("", false,[], s));
         }
     }
     static string HexExponent(GetName g)
@@ -3155,7 +2870,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart")(p);
+            return         pegged.peg.defined!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart")(p);
         }
         else
         {
@@ -3163,7 +2878,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart"), "HexExponentStart")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart"), "HexExponentStart")(p);
                 memo[tuple(`HexExponentStart`,p.end)] = result;
                 return result;
             }
@@ -3174,12 +2889,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart"), "HexExponentStart")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.keywords!("p+", "P+", "p-", "P-", "p", "P"), "D.HexExponentStart"), "HexExponentStart")(TParseTree("", false,[], s));
         }
     }
     static string HexExponentStart(GetName g)
@@ -3191,7 +2906,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix")(p);
         }
         else
         {
@@ -3199,7 +2914,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix"), "Suffix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix"), "Suffix")(p);
                 memo[tuple(`Suffix`,p.end)] = result;
                 return result;
             }
@@ -3210,12 +2925,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix"), "Suffix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(FloatSuffix, RealSuffix, ImaginarySuffix, pegged.peg.and!(FloatSuffix, ImaginarySuffix), pegged.peg.and!(RealSuffix, ImaginarySuffix)), "D.Suffix"), "Suffix")(TParseTree("", false,[], s));
         }
     }
     static string Suffix(GetName g)
@@ -3227,7 +2942,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix")(p);
+            return         pegged.peg.defined!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix")(p);
         }
         else
         {
@@ -3235,7 +2950,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix"), "FloatSuffix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix"), "FloatSuffix")(p);
                 memo[tuple(`FloatSuffix`,p.end)] = result;
                 return result;
             }
@@ -3246,12 +2961,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix"), "FloatSuffix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.keywords!("f", "F"), "D.FloatSuffix"), "FloatSuffix")(TParseTree("", false,[], s));
         }
     }
     static string FloatSuffix(GetName g)
@@ -3263,7 +2978,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("L"), "D.RealSuffix")(p);
+            return         pegged.peg.defined!(pegged.peg.literal!("L"), "D.RealSuffix")(p);
         }
         else
         {
@@ -3271,7 +2986,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.literal!("L"), "D.RealSuffix"), "RealSuffix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.literal!("L"), "D.RealSuffix"), "RealSuffix")(p);
                 memo[tuple(`RealSuffix`,p.end)] = result;
                 return result;
             }
@@ -3282,12 +2997,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("L"), "D.RealSuffix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.literal!("L"), "D.RealSuffix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.literal!("L"), "D.RealSuffix"), "RealSuffix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.literal!("L"), "D.RealSuffix"), "RealSuffix")(TParseTree("", false,[], s));
         }
     }
     static string RealSuffix(GetName g)
@@ -3299,7 +3014,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("i"), "D.ImaginarySuffix")(p);
+            return         pegged.peg.defined!(pegged.peg.literal!("i"), "D.ImaginarySuffix")(p);
         }
         else
         {
@@ -3307,7 +3022,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.literal!("i"), "D.ImaginarySuffix"), "ImaginarySuffix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.literal!("i"), "D.ImaginarySuffix"), "ImaginarySuffix")(p);
                 memo[tuple(`ImaginarySuffix`,p.end)] = result;
                 return result;
             }
@@ -3318,12 +3033,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.literal!("i"), "D.ImaginarySuffix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.literal!("i"), "D.ImaginarySuffix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.literal!("i"), "D.ImaginarySuffix"), "ImaginarySuffix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.literal!("i"), "D.ImaginarySuffix"), "ImaginarySuffix")(TParseTree("", false,[], s));
         }
     }
     static string ImaginarySuffix(GetName g)
@@ -3335,7 +3050,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal")(p);
         }
         else
         {
@@ -3343,7 +3058,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal"), "LeadingDecimal")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal"), "LeadingDecimal")(p);
                 memo[tuple(`LeadingDecimal`,p.end)] = result;
                 return result;
             }
@@ -3354,12 +3069,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal"), "LeadingDecimal")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalInteger, pegged.peg.and!(pegged.peg.literal!("0"), DecimalDigitsNoSingleUS)), "D.LeadingDecimal"), "LeadingDecimal")(TParseTree("", false,[], s));
         }
     }
     static string LeadingDecimal(GetName g)
@@ -3371,7 +3086,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral")(p);
         }
         else
         {
@@ -3379,7 +3094,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral"), "IntegerLiteral")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral"), "IntegerLiteral")(p);
                 memo[tuple(`IntegerLiteral`,p.end)] = result;
                 return result;
             }
@@ -3390,12 +3105,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral"), "IntegerLiteral")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral"), "IntegerLiteral")(TParseTree("", false,[], s));
         }
     }
     static string IntegerLiteral(GetName g)
@@ -3407,7 +3122,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer")(p);
         }
         else
         {
@@ -3415,7 +3130,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer"), "Integer")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer"), "Integer")(p);
                 memo[tuple(`Integer`,p.end)] = result;
                 return result;
             }
@@ -3426,12 +3141,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer"), "Integer")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(BinaryInteger, HexadecimalInteger, DecimalInteger), "D.Integer"), "Integer")(TParseTree("", false,[], s));
         }
     }
     static string Integer(GetName g)
@@ -3443,7 +3158,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix")(p);
+            return         pegged.peg.defined!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix")(p);
         }
         else
         {
@@ -3451,7 +3166,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix"), "IntegerSuffix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix"), "IntegerSuffix")(p);
                 memo[tuple(`IntegerSuffix`,p.end)] = result;
                 return result;
             }
@@ -3462,12 +3177,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix"), "IntegerSuffix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.keywords!("Lu", "LU", "uL", "UL", "L", "U", "u"), "D.IntegerSuffix"), "IntegerSuffix")(TParseTree("", false,[], s));
         }
     }
     static string IntegerSuffix(GetName g)
@@ -3479,7 +3194,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger")(p);
         }
         else
         {
@@ -3487,7 +3202,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger"), "DecimalInteger")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger"), "DecimalInteger")(p);
                 memo[tuple(`DecimalInteger`,p.end)] = result;
                 return result;
             }
@@ -3498,12 +3213,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger"), "DecimalInteger")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.literal!("0"), pegged.peg.and!(NonZeroDigit, pegged.peg.option!(DecimalDigitsUS)))), "D.DecimalInteger"), "DecimalInteger")(TParseTree("", false,[], s));
         }
     }
     static string DecimalInteger(GetName g)
@@ -3515,7 +3230,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger")(p);
         }
         else
         {
@@ -3523,7 +3238,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger"), "BinaryInteger")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger"), "BinaryInteger")(p);
                 memo[tuple(`BinaryInteger`,p.end)] = result;
                 return result;
             }
@@ -3534,12 +3249,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger"), "BinaryInteger")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(BinPrefix, BinaryDigits)), "D.BinaryInteger"), "BinaryInteger")(TParseTree("", false,[], s));
         }
     }
     static string BinaryInteger(GetName g)
@@ -3551,7 +3266,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix")(p);
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix")(p);
         }
         else
         {
@@ -3559,7 +3274,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix"), "BinPrefix")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix"), "BinPrefix")(p);
                 memo[tuple(`BinPrefix`,p.end)] = result;
                 return result;
             }
@@ -3570,12 +3285,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix"), "BinPrefix")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.keywords!("0b", "0B")), "D.BinPrefix"), "BinPrefix")(TParseTree("", false,[], s));
         }
     }
     static string BinPrefix(GetName g)
@@ -3587,7 +3302,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger")(p);
         }
         else
         {
@@ -3595,7 +3310,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger"), "HexadecimalInteger")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger"), "HexadecimalInteger")(p);
                 memo[tuple(`HexadecimalInteger`,p.end)] = result;
                 return result;
             }
@@ -3606,12 +3321,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger"), "HexadecimalInteger")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.and!(HexPrefix, HexDigitsNoSingleUS)), "D.HexadecimalInteger"), "HexadecimalInteger")(TParseTree("", false,[], s));
         }
     }
     static string HexadecimalInteger(GetName g)
@@ -3623,7 +3338,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit")(p);
+            return         pegged.peg.defined!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit")(p);
         }
         else
         {
@@ -3631,7 +3346,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit"), "NonZeroDigit")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit"), "NonZeroDigit")(p);
                 memo[tuple(`NonZeroDigit`,p.end)] = result;
                 return result;
             }
@@ -3642,12 +3357,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit"), "NonZeroDigit")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.charRange!('1', '9'), "D.NonZeroDigit"), "NonZeroDigit")(TParseTree("", false,[], s));
         }
     }
     static string NonZeroDigit(GetName g)
@@ -3659,7 +3374,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits")(p);
         }
         else
         {
@@ -3667,7 +3382,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits"), "DecimalDigits")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits"), "DecimalDigits")(p);
                 memo[tuple(`DecimalDigits`,p.end)] = result;
                 return result;
             }
@@ -3678,12 +3393,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits"), "DecimalDigits")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(DecimalDigit), "D.DecimalDigits"), "DecimalDigits")(TParseTree("", false,[], s));
         }
     }
     static string DecimalDigits(GetName g)
@@ -3695,7 +3410,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS")(p);
         }
         else
         {
@@ -3703,7 +3418,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS"), "DecimalDigitsUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS"), "DecimalDigitsUS")(p);
                 memo[tuple(`DecimalDigitsUS`,p.end)] = result;
                 return result;
             }
@@ -3714,12 +3429,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS"), "DecimalDigitsUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.oneOrMore!(DecimalDigitUS)), "D.DecimalDigitsUS"), "DecimalDigitsUS")(TParseTree("", false,[], s));
         }
     }
     static string DecimalDigitsUS(GetName g)
@@ -3731,7 +3446,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS")(p);
         }
         else
         {
@@ -3739,7 +3454,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS"), "DecimalDigitsNoSingleUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS"), "DecimalDigitsNoSingleUS")(p);
                 memo[tuple(`DecimalDigitsNoSingleUS`,p.end)] = result;
                 return result;
             }
@@ -3750,12 +3465,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS"), "DecimalDigitsNoSingleUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), pegged.peg.and!(DecimalDigitsUS, DecimalDigit))), "D.DecimalDigitsNoSingleUS"), "DecimalDigitsNoSingleUS")(TParseTree("", false,[], s));
         }
     }
     static string DecimalDigitsNoSingleUS(GetName g)
@@ -3767,7 +3482,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS")(p);
         }
         else
         {
@@ -3775,7 +3490,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS"), "DecimalDigitNoStartingUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS"), "DecimalDigitNoStartingUS")(p);
                 memo[tuple(`DecimalDigitNoStartingUS`,p.end)] = result;
                 return result;
             }
@@ -3786,12 +3501,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS"), "DecimalDigitNoStartingUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(DecimalDigit, pegged.peg.option!(DecimalDigitsUS)), "D.DecimalDigitNoStartingUS"), "DecimalDigitNoStartingUS")(TParseTree("", false,[], s));
         }
     }
     static string DecimalDigitNoStartingUS(GetName g)
@@ -3803,7 +3518,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit")(p);
         }
         else
         {
@@ -3811,7 +3526,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit"), "DecimalDigit")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit"), "DecimalDigit")(p);
                 memo[tuple(`DecimalDigit`,p.end)] = result;
                 return result;
             }
@@ -3822,12 +3537,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit"), "DecimalDigit")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("0"), NonZeroDigit), "D.DecimalDigit"), "DecimalDigit")(TParseTree("", false,[], s));
         }
     }
     static string DecimalDigit(GetName g)
@@ -3839,7 +3554,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS")(p);
         }
         else
         {
@@ -3847,7 +3562,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS"), "DecimalDigitUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS"), "DecimalDigitUS")(p);
                 memo[tuple(`DecimalDigitUS`,p.end)] = result;
                 return result;
             }
@@ -3858,12 +3573,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS"), "DecimalDigitUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.DecimalDigitUS"), "DecimalDigitUS")(TParseTree("", false,[], s));
         }
     }
     static string DecimalDigitUS(GetName g)
@@ -3875,7 +3590,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS")(p);
         }
         else
         {
@@ -3883,7 +3598,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS"), "BinaryDigitsUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS"), "BinaryDigitsUS")(p);
                 memo[tuple(`BinaryDigitsUS`,p.end)] = result;
                 return result;
             }
@@ -3894,12 +3609,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS"), "BinaryDigitsUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(BinaryDigitUS), "D.BinaryDigitsUS"), "BinaryDigitsUS")(TParseTree("", false,[], s));
         }
     }
     static string BinaryDigitsUS(GetName g)
@@ -3911,7 +3626,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(BinaryDigitsUS, "D.BinaryDigits")(p);
+            return         pegged.peg.defined!(BinaryDigitsUS, "D.BinaryDigits")(p);
         }
         else
         {
@@ -3919,7 +3634,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(BinaryDigitsUS, "D.BinaryDigits"), "BinaryDigits")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(BinaryDigitsUS, "D.BinaryDigits"), "BinaryDigits")(p);
                 memo[tuple(`BinaryDigits`,p.end)] = result;
                 return result;
             }
@@ -3930,12 +3645,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(BinaryDigitsUS, "D.BinaryDigits")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(BinaryDigitsUS, "D.BinaryDigits")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(BinaryDigitsUS, "D.BinaryDigits"), "BinaryDigits")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(BinaryDigitsUS, "D.BinaryDigits"), "BinaryDigits")(TParseTree("", false,[], s));
         }
     }
     static string BinaryDigits(GetName g)
@@ -3947,7 +3662,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit")(p);
+            return         pegged.peg.defined!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit")(p);
         }
         else
         {
@@ -3955,7 +3670,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit"), "BinaryDigit")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit"), "BinaryDigit")(p);
                 memo[tuple(`BinaryDigit`,p.end)] = result;
                 return result;
             }
@@ -3966,12 +3681,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit"), "BinaryDigit")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.charRange!('0', '1'), "D.BinaryDigit"), "BinaryDigit")(TParseTree("", false,[], s));
         }
     }
     static string BinaryDigit(GetName g)
@@ -3983,7 +3698,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS")(p);
         }
         else
         {
@@ -3991,7 +3706,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS"), "BinaryDigitUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS"), "BinaryDigitUS")(p);
                 memo[tuple(`BinaryDigitUS`,p.end)] = result;
                 return result;
             }
@@ -4002,12 +3717,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS"), "BinaryDigitUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(BinaryDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.BinaryDigitUS"), "BinaryDigitUS")(TParseTree("", false,[], s));
         }
     }
     static string BinaryDigitUS(GetName g)
@@ -4019,7 +3734,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits")(p);
         }
         else
         {
@@ -4027,7 +3742,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits"), "OctalDigits")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits"), "OctalDigits")(p);
                 memo[tuple(`OctalDigits`,p.end)] = result;
                 return result;
             }
@@ -4038,12 +3753,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits"), "OctalDigits")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigit), "D.OctalDigits"), "OctalDigits")(TParseTree("", false,[], s));
         }
     }
     static string OctalDigits(GetName g)
@@ -4055,7 +3770,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS")(p);
         }
         else
         {
@@ -4063,7 +3778,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS"), "OctalDigitsUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS"), "OctalDigitsUS")(p);
                 memo[tuple(`OctalDigitsUS`,p.end)] = result;
                 return result;
             }
@@ -4074,12 +3789,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS"), "OctalDigitsUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(OctalDigitUS), "D.OctalDigitsUS"), "OctalDigitsUS")(TParseTree("", false,[], s));
         }
     }
     static string OctalDigitsUS(GetName g)
@@ -4091,7 +3806,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.charRange!('0', '7'), "D.OctalDigit")(p);
+            return         pegged.peg.defined!(pegged.peg.charRange!('0', '7'), "D.OctalDigit")(p);
         }
         else
         {
@@ -4099,7 +3814,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.charRange!('0', '7'), "D.OctalDigit"), "OctalDigit")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.charRange!('0', '7'), "D.OctalDigit"), "OctalDigit")(p);
                 memo[tuple(`OctalDigit`,p.end)] = result;
                 return result;
             }
@@ -4110,12 +3825,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.charRange!('0', '7'), "D.OctalDigit")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.charRange!('0', '7'), "D.OctalDigit")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.charRange!('0', '7'), "D.OctalDigit"), "OctalDigit")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.charRange!('0', '7'), "D.OctalDigit"), "OctalDigit")(TParseTree("", false,[], s));
         }
     }
     static string OctalDigit(GetName g)
@@ -4127,7 +3842,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS")(p);
         }
         else
         {
@@ -4135,7 +3850,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS"), "OctalDigitUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS"), "OctalDigitUS")(p);
                 memo[tuple(`OctalDigitUS`,p.end)] = result;
                 return result;
             }
@@ -4146,12 +3861,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS"), "OctalDigitUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(OctalDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.OctalDigitUS"), "OctalDigitUS")(TParseTree("", false,[], s));
         }
     }
     static string OctalDigitUS(GetName g)
@@ -4163,7 +3878,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits")(p);
         }
         else
         {
@@ -4171,7 +3886,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits"), "HexDigits")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits"), "HexDigits")(p);
                 memo[tuple(`HexDigits`,p.end)] = result;
                 return result;
             }
@@ -4182,12 +3897,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits"), "HexDigits")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigit), "D.HexDigits"), "HexDigits")(TParseTree("", false,[], s));
         }
     }
     static string HexDigits(GetName g)
@@ -4199,7 +3914,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS")(p);
         }
         else
         {
@@ -4207,7 +3922,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS"), "HexDigitsUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS"), "HexDigitsUS")(p);
                 memo[tuple(`HexDigitsUS`,p.end)] = result;
                 return result;
             }
@@ -4218,12 +3933,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS"), "HexDigitsUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(HexDigitUS), "D.HexDigitsUS"), "HexDigitsUS")(TParseTree("", false,[], s));
         }
     }
     static string HexDigitsUS(GetName g)
@@ -4235,7 +3950,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS")(p);
         }
         else
         {
@@ -4243,7 +3958,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS"), "HexDigitUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS"), "HexDigitUS")(p);
                 memo[tuple(`HexDigitUS`,p.end)] = result;
                 return result;
             }
@@ -4254,12 +3969,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS"), "HexDigitUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(HexDigit, pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexDigitUS"), "HexDigitUS")(TParseTree("", false,[], s));
         }
     }
     static string HexDigitUS(GetName g)
@@ -4271,7 +3986,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS")(p);
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS")(p);
         }
         else
         {
@@ -4279,7 +3994,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS"), "HexDigitsNoSingleUS")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS"), "HexDigitsNoSingleUS")(p);
                 memo[tuple(`HexDigitsNoSingleUS`,p.end)] = result;
                 return result;
             }
@@ -4290,12 +4005,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS"), "HexDigitsNoSingleUS")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.fuse!(pegged.peg.or!(pegged.peg.and!(HexDigit, pegged.peg.option!(HexDigitsUS)), pegged.peg.and!(HexDigitsUS, HexDigit))), "D.HexDigitsNoSingleUS"), "HexDigitsNoSingleUS")(TParseTree("", false,[], s));
         }
     }
     static string HexDigitsNoSingleUS(GetName g)
@@ -4307,7 +4022,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit")(p);
         }
         else
         {
@@ -4315,7 +4030,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit"), "HexDigit")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit"), "HexDigit")(p);
                 memo[tuple(`HexDigit`,p.end)] = result;
                 return result;
             }
@@ -4326,12 +4041,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit"), "HexDigit")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(DecimalDigit, HexLetter), "D.HexDigit"), "HexDigit")(TParseTree("", false,[], s));
         }
     }
     static string HexDigit(GetName g)
@@ -4343,7 +4058,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter")(p);
         }
         else
         {
@@ -4351,7 +4066,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter"), "HexLetter")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter"), "HexLetter")(p);
                 memo[tuple(`HexLetter`,p.end)] = result;
                 return result;
             }
@@ -4362,12 +4077,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.named!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.named!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter"), "HexLetter")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.charRange!('a', 'f'), pegged.peg.charRange!('A', 'F'), pegged.peg.discard!(pegged.peg.literal!("_"))), "D.HexLetter"), "HexLetter")(TParseTree("", false,[], s));
         }
     }
     static string HexLetter(GetName g)

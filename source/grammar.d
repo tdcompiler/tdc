@@ -13,7 +13,7 @@ Declaration < Decl
 
 Decl < StorageClasses Decl
 	/ BasicType Declarators :";"
-	/ BasicType Declarator FunctionBody
+	/ (BasicType Declarator FunctionBody) # {derp}
 
 BasicType <- BasicTypeX
 	/ IdentifierList
@@ -119,6 +119,9 @@ Identifier <- identifier
 #	/ NonZeroDigit
 
 FunctionBody <- BlockStatement
+	/ BodyStatement
+
+BodyStatement < "body" BlockStatement
 
 BlockStatement < "{" "}"
 	/ :"{" StatementList :"}"

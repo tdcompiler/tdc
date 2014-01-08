@@ -1,10 +1,14 @@
 module source.app;
 
-import std.stdio,
-	std.file,
-	std.algorithm,
-	std.regex,
-	pegged.grammar;
+import std.stdio;
+import std.file;
+import std.algorithm;
+import std.regex;
+import std.c.stdlib : exit;
+
+import pegged.grammar;
+
+import source.semantic;
 
 alias std.file.write writeFile;
 
@@ -13,10 +17,8 @@ enum resultDir = "../results";
 
 struct Work {
 	ParseTree parse;
-	string semant;
+	SemantTree semant;
 }
-
-//enum grammar = findGrammar();
 
 private bool overwriteAllPassing = false;
 private Work[] cases = [];
@@ -66,35 +68,6 @@ void main(string[] args) {
 	}
 }
 
-string typeCheck(in ParseTree n) {
-	switch (n.name) {
-		case "D": return typeCheck(n.children[0]);
-		case "D.Module": return typeCheck(n.children[0]);
-		case "D.DeclDef": {
-			if (isFunction(n)) {
-				return "Definitely a function";
-			} else {
-				return "No idea what this is";
-				//throw new Exception("Herp derp");
-			}
-		}
-		default: string result = "";
-				 foreach (const c; n.children) result ~= c.typeCheck();
-				 return result;
-	}
-}
-
-//struct Node {
-//	bool immutable_, const_, 
-//}
-
-bool isFunction(in ParseTree n) {
-	foreach (c; n.children) {
-		if (c.name == "D.FunctionBody") return true;
-	}
-	return false;
-}
-
 auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	/*
 	 * Replaces \ with / in path to give to unite Unix and Windows
@@ -113,13 +86,14 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	/*
 	 * The target file is read and parsed.
 	 */
-	import precompiled_grammar;
+	import source.precompiled_grammar;
 	auto file = readText(name);
 	file = file.replaceAll!(a => "\n")(regex(r"\r\n"));
 	auto tree = D(file);
 	Work w;
 	w.parse = tree;
 	w.semant = tree.typeCheck;
+	//writeln(w.semant);
 	cases ~= w;
 	auto treeText = tree.toString;
 	if (!tree.successful) {
@@ -157,7 +131,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 		writeln(previousFile);
 		writeln("Current result:");
 		writeln(tree);
-		write("Overwrite - Yes, No, All yes: ");
+		write("Overwrite - Yes, No, All yes, Quit: ");
 		char reply;
 		scanf("%s", &reply);
 		if (reply == 'y') {
@@ -167,6 +141,8 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 			overwriteAllPassing = true;
 			writeln("Overwriting all old files.");
 			resultPath.writeFile(treeText);
+		} else if (reply == 'q') {
+			exit(0);
 		} else {
 			writeln("Preserving old file.");
 		}
@@ -182,6 +158,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 		writeln(tree);
 		resultPath.writeFile(treeText);
 	}
+
 	return tree.successful;
 }
 
@@ -196,8 +173,8 @@ bool precompile() {
 		import source.grammar;
 
 		writeln("Can't find precompiled grammar. Parsing grammar...");
-		
-		asModule("precompiled_grammar", "../source/precompiled_grammar", dGrammar);
+
+		saveGrammar;
 
 		return true;
 	}
@@ -209,7 +186,7 @@ bool precompile() {
 
 		writeln("Precompiled grammar predates current grammar. Parsing grammar...");
 
-		asModule("precompiled_grammar", "../source/precompiled_grammar", dGrammar);
+		saveGrammar;
 
 		writeln("Grammar has been modified. Please recompile.");
 
@@ -217,4 +194,17 @@ bool precompile() {
 	}
 
 	return false;
+}
+
+void saveGrammar() {
+	string grammar = `
+module source.precompiled_grammar;
+
+public import pegged.peg;
+import std.algorithm: startsWith;
+import std.functional: toDelegate;
+import source.semantic;
+
+` ~ grammar(source.grammar.dGrammar);
+	"../source/precompiled_grammar.d".writeFile(grammar);
 }
