@@ -13,7 +13,7 @@ Declaration < Decl
 
 Decl < StorageClasses Decl
 	/ BasicType Declarators :";"
-	/ (BasicType Declarator FunctionBody) # {derp}
+	/ (BasicType Declarator FunctionBody) {basicFunction}
 
 BasicType <- BasicTypeX
 	/ IdentifierList
@@ -259,6 +259,13 @@ ImaginarySuffix <- "i"
 
 LeadingDecimal <- DecimalInteger
 	/ "0" DecimalDigitsNoSingleUS
+
+#IntegerLiteral < (BinaryInteger IntegerSuffix) {binaryIntegerSuffix}
+#	/ (BinaryInteger) {binaryInteger}
+#	/ (HexadecimalInteger IntegerSuffix) {hexadecimalIntegerSuffix}
+#	/ (HexadecimalInteger) {hexadecimalInteger}
+#	/ (DecimalInteger IntegerSuffix) {decimalIntegerSuffix}
+#	/ (DecimalInteger) {decimalInteger}
 
 IntegerLiteral <- Integer IntegerSuffix?
 

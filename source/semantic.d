@@ -1,11 +1,26 @@
 module source.semantic;
 
+import std.algorithm;
+import std.conv;
+import std.stdio;
+import std.string;
+
 import pegged.peg;
 
-SemantTree typeCheck(in ParseTree n) {
+enum semanticArray = ["basicFunction", "binaryIntegerSuffix", "binaryInteger", "hexadecimalIntegerSuffix",
+	"hexadecimalInteger", "decimalIntegerSuffix", "decimalInteger"];
+
+mixin(semanticArray.map!(a => `T ` ~ a ~ `(T)(T t) {
+	t.name = "D." ~ "` ~ a ~ `";
+	return t;
+}`).join());
+
+SemantTree typeCheck(ParseTree n) {
 	SemantTree[] children;
 	children.length = n.children.length;
 	foreach (immutable i, child; n.children) children[i] = child.typeCheck;
+	bool successful = true;
+	foreach (child; children) if (!child.successful) successful = false;
 	Type type;
 	switch (n.name) {
 		case "D.BasicType":
@@ -14,12 +29,53 @@ SemantTree typeCheck(in ParseTree n) {
 		case "D.BasicTypeX":
 			type = Type(n.matches[0]);
 			break;
-		default:
+		case "D.DecimalInteger":
+			type = parseInteger(n.matches.join, 10);
+			break;
+		case "D.HexadecimalInteger":
+			type = parseInteger(n.matches.join, 16);
+			break;
+		case "D.BinaryInteger":
+			type = parseInteger(n.matches.join, 2);
+			break;
+		case "D.basicFunction":
+			Type declaredType = children[0].type;
+			Type actualType = children[2].type;
+			if (declaredType != actualType) {
+				successful = false;
+				writeln("Declared and actual type of function don't match: ",
+				        declaredType.toString, " != ", actualType.toString);
+				writeln(n.children[0].begin, " ", n.end);
+				type = Type("error");
+			} else {
+				type = declaredType;
+			}
+			break;
+		/*case "D.Decl":
 			type = Type("void");
+			break;*/
+		case "D.Module":
+			type = Type("");
+			break;
+		default:
+			if (children.length == 0) {
+				type = Type("void");
+			} else {
+				type = children[0].type;
+			}
 			break;
 	}
 
-	return SemantTree(n.name, false, type, children);
+	return SemantTree(n.name, successful, type, children, n);
+}
+
+Type parseInteger(string s, ushort radix) {
+	scope (failure) {
+		return Type("error");
+	}
+	auto value = parse!ulong(s, radix);
+	if (value < 2_147_483_647) return Type("int");
+	else return Type("long");
 }
 
 struct Type {
@@ -35,6 +91,7 @@ struct SemantTree {
 	bool successful;
 	Type type;
 	SemantTree[] children;
+	ParseTree original;
 
 	string toString(string tabs = "") {
 		string result = name ~ " : " ~ type.toString;
