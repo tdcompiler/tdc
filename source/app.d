@@ -13,11 +13,14 @@ import source.semantic;
 alias std.file.write writeFile;
 
 enum testDir = "../tests";
-enum resultDir = "../results";
+enum resultParseDir = "../results/parse";
+enum resultSemanticDir = "../results/semantic";
 
 struct Work {
 	ParseTree parse;
+	string pathParse;
 	SemantTree semant;
+	string pathSemant;
 }
 
 private bool overwriteAllPassing = false;
@@ -31,29 +34,35 @@ void main(string[] args) {
 	*/
 	if (precompile) return;
 
-	auto success = 0;
-	auto failed = 0;
-	string[] errors = [];
+	auto successParse = 0;
+	auto failedParse = 0;
+	auto successTypecheck = 0;
+	auto failedTypecheck = 0;
+	string[] errorsParse = [];
+	string[] errorsTypecheck = [];
 	if (args.length == 1) {
 		foreach (immutable string name; dirEntries(testDir, "*.d", SpanMode.depth)) {
-			if (parse(name, errors)) success++;
-			else failed++;
+			if (parse(name, errorsParse)) successParse++;
+			else failedParse++;
+			if (semantic(cases[$ - 1], errorsTypecheck)) successTypecheck++;
+			else failedTypecheck++;
 		}
 		writeln;
-		writeln("Successful testcases:\t", success);
-		writeln("Failed testcases:\t", failed);
+		writeln("Successful testcases:\t", successParse, "\t", successTypecheck);
+		writeln("Failed testcases:\t", failedParse, "\t", failedTypecheck);
 		writeln;
 	} else {
 		foreach (immutable string name; args[1 .. $]) {
-			parse(testDir ~ "/" ~ name, errors, true);
+			parse(testDir ~ "/" ~ name, errorsParse, true);
+			semantic(cases[$ - 1], errorsTypecheck, true);
 		}
 	}
 
 	/*
 	 * All errors are available to be viewed or ignored.
 	 */
-	foreach (immutable i, ref e; errors) {
-		write("View error ", i + 1, " - Yes, No, All yes, Quit: ");
+	foreach (immutable i, ref e; errorsParse) {
+		write("View parse error ", i + 1, " - Yes, No, All yes, Quit: ");
 		char reply;
 		scanf("%s", &reply);
 		if (reply == 'y') {
@@ -61,11 +70,98 @@ void main(string[] args) {
 		} else if (reply == 'q') {
 			return;
 		} else if (reply == 'a') {
-			foreach (immutable e2; errors[i .. $])
+			foreach (immutable e2; errorsParse[i .. $])
 				e2.writeln;
 			return;
 		}
 	}
+
+	foreach (immutable i, ref e; errorsTypecheck) {
+		write("View typecheck error ", i + 1, " - Yes, No, All yes, Quit: ");
+		char reply;
+		scanf("%s", &reply);
+		if (reply == 'y') {
+			e.writeln;
+		} else if (reply == 'q') {
+			return;
+		} else if (reply == 'a') {
+			foreach (immutable e2; errorsTypecheck[i .. $])
+				e2.writeln;
+			return;
+		}
+	}
+}
+
+auto semantic(ref Work w, ref string[] errors, bool forceOutput = false) {
+	auto tree = w.parse.typeCheck;
+	w.semant = tree;
+	auto treeText = tree.toString;
+	auto resultParsePath = w.pathSemant;
+
+	if (!tree.successful) {
+		errors ~= tree.name ~ "\n" ~ treeText ~ "\n"
+			~ tree.errors ~ "\n";
+	}
+
+	if (resultParsePath.exists) {
+		/*
+		 * The previous result is read and compared to the new result.
+		 * If they are different, both are printed, and the user must
+		 * decide which result to keep.
+		 */
+		if (!tree.successful) {
+			return tree.successful;
+		}
+		auto previousFile = readText(w.pathSemant);
+		if (tree.toString == previousFile) {
+			if (forceOutput) {
+				//writeln(name);
+				//writeln(file);
+				writeln("Previous result identical to current result:");
+				writeln(treeText);
+				//writeln(w.semant);
+			}
+			return tree.successful;
+		}
+		if (overwriteAllPassing) {
+			resultParsePath.writeFile(treeText);
+			return tree.successful;
+		}
+		//writeln(name);
+		//writeln(file);
+		writeln("Previous result:");
+		writeln(previousFile);
+		writeln("Current result:");
+		writeln(tree);
+		write("Overwrite - Yes, No, All yes, Quit: ");
+		char reply;
+		scanf("%s", &reply);
+		if (reply == 'y') {
+			writeln("Overwriting old file.");
+			resultParsePath.writeFile(treeText);
+		} else if (reply == 'a') {
+			overwriteAllPassing = true;
+			writeln("Overwriting all old files.");
+			resultParsePath.writeFile(treeText);
+		} else if (reply == 'q') {
+			exit(0);
+		} else {
+			writeln("Preserving old file.");
+		}
+	} else {
+		/*
+		 * No previous result existed. Program and parse tree are both
+		 * printed and the tree is stored.
+		 */
+		//writeln(name);
+		//writeln(file);
+		writeln("New test result:");
+		//writeln(file);
+		writeln(tree);
+		resultParsePath.writeFile(treeText);
+	}
+	
+	return tree.successful;
 }
 
 auto parse(string name, ref string[] errors, bool forceOutput = false) {
@@ -75,13 +171,17 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	 * from the text and the middle path is preserved. If it does not
 	 * exist in the result folder, it will be generated.
 	 */
+	import std.string;
+
 	name = name.replaceAll!(a => "/")(regex(r"[\\]"));
-	auto resultPath = resultDir ~ name[testDir.length .. $];
-	auto middlePath = resultDir
-		~ name.dup[testDir.length .. $]
-		.reverse.find('/').reverse;
-	if (!middlePath.exists)
-		middlePath.mkdirRecurse;
+	auto resultParsePath = resultParseDir ~ name[testDir.length .. $];
+	auto middleParsePath = resultParseDir ~ name[testDir.length .. name.lastIndexOf('/')];
+	if (!middleParsePath.exists)
+		middleParsePath.mkdirRecurse;
+	auto resultSemanticPath = resultSemanticDir ~ name[testDir.length .. $];
+	auto middleSemanticPath = resultSemanticDir ~ name[testDir.length .. name.lastIndexOf('/')];
+	if (!middleSemanticPath.exists)
+		middleSemanticPath.mkdirRecurse;
 
 	/*
 	 * The target file is read and parsed.
@@ -92,8 +192,8 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	auto tree = D(file);
 	Work w;
 	w.parse = tree;
-	w.semant = tree.typeCheck;
-	//writeln(w.semant);
+	w.pathParse = resultParseDir;
+	w.pathSemant = resultSemanticPath;
 	cases ~= w;
 	auto treeText = tree.toString;
 	if (!tree.successful) {
@@ -101,7 +201,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 				~ tree.failMsg ~ "\n";
 	}
 
-	if (resultPath.exists) {
+	if (resultParsePath.exists) {
 		/*
 		 * The previous result is read and compared to the new result.
 		 * If they are different, both are printed, and the user must
@@ -110,7 +210,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 		if (!tree.successful) {
 			return tree.successful;
 		}
-		auto previousFile = readText(resultPath);
+		auto previousFile = readText(resultParsePath);
 		if (tree.toString == previousFile) {
 			if (forceOutput) {
 				writeln(name);
@@ -122,7 +222,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 			return tree.successful;
 		}
 		if (overwriteAllPassing) {
-			resultPath.writeFile(treeText);
+			resultParsePath.writeFile(treeText);
 			return tree.successful;
 		}
 		writeln(name);
@@ -136,11 +236,11 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 		scanf("%s", &reply);
 		if (reply == 'y') {
 			writeln("Overwriting old file.");
-			resultPath.writeFile(treeText);
+			resultParsePath.writeFile(treeText);
 		} else if (reply == 'a') {
 			overwriteAllPassing = true;
 			writeln("Overwriting all old files.");
-			resultPath.writeFile(treeText);
+			resultParsePath.writeFile(treeText);
 		} else if (reply == 'q') {
 			exit(0);
 		} else {
@@ -156,7 +256,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 		writeln("New test result:");
 		writeln(file);
 		writeln(tree);
-		resultPath.writeFile(treeText);
+		resultParsePath.writeFile(treeText);
 	}
 
 	return tree.successful;

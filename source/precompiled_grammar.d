@@ -3086,7 +3086,7 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.action!(pegged.peg.and!(Integer, IntegerSuffix), integerWithSuffix), Integer), "D.IntegerLiteral")(p);
         }
         else
         {
@@ -3094,7 +3094,7 @@ struct GenericD(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral"), "IntegerLiteral")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.action!(pegged.peg.and!(Integer, IntegerSuffix), integerWithSuffix), Integer), "D.IntegerLiteral"), "IntegerLiteral")(p);
                 memo[tuple(`IntegerLiteral`,p.end)] = result;
                 return result;
             }
@@ -3105,12 +3105,12 @@ struct GenericD(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.action!(pegged.peg.and!(Integer, IntegerSuffix), integerWithSuffix), Integer), "D.IntegerLiteral")(TParseTree("", false,[], s));
         }
         else
         {
             memo = null;
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(Integer, pegged.peg.option!(IntegerSuffix)), "D.IntegerLiteral"), "IntegerLiteral")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.action!(pegged.peg.and!(Integer, IntegerSuffix), integerWithSuffix), Integer), "D.IntegerLiteral"), "IntegerLiteral")(TParseTree("", false,[], s));
         }
     }
     static string IntegerLiteral(GetName g)

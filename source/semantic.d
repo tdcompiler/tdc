@@ -7,8 +7,7 @@ import std.string;
 
 import pegged.peg;
 
-enum semanticArray = ["basicFunction", "binaryIntegerSuffix", "binaryInteger", "hexadecimalIntegerSuffix",
-	"hexadecimalInteger", "decimalIntegerSuffix", "decimalInteger"];
+enum semanticArray = ["basicFunction", "integerWithSuffix"];
 
 mixin(semanticArray.map!(a => `T ` ~ a ~ `(T)(T t) {
 	t.name = "D." ~ "` ~ a ~ `";
@@ -22,41 +21,67 @@ SemantTree typeCheck(ParseTree n) {
 	bool successful = true;
 	foreach (child; children) if (!child.successful) successful = false;
 	Type type;
+	string errors = "";
+	foreach (child; children) errors ~= child.errors;
 	switch (n.name) {
 		case "D.BasicType":
 			type = children[0].type;
 			break;
+
 		case "D.BasicTypeX":
 			type = Type(n.matches[0]);
 			break;
+
 		case "D.DecimalInteger":
 			type = parseInteger(n.matches.join, 10);
 			break;
+
 		case "D.HexadecimalInteger":
 			type = parseInteger(n.matches.join, 16);
 			break;
+
 		case "D.BinaryInteger":
 			type = parseInteger(n.matches.join, 2);
 			break;
+
+		case "D.integerWithSuffix":
+			Type rawType = children[0].type;
+			auto suffix = children[1].original.matches.join;
+			bool isLong = rawType == Type("long") || suffix.indexOf('l', CaseSensitive.no) != -1;
+			bool isUnsigned = suffix.indexOf('u', CaseSensitive.no) != -1;
+			if (isLong && isUnsigned) {
+				type = Type("ulong");
+			} else if (isUnsigned) {
+				type = Type("uint");
+			} else if (isLong) {
+				type = Type("long");
+			} else {
+				type = Type("int");
+			}
+			break;
+
 		case "D.basicFunction":
 			Type declaredType = children[0].type;
 			Type actualType = children[2].type;
 			if (declaredType != actualType) {
 				successful = false;
-				writeln("Declared and actual type of function don't match: ",
-				        declaredType.toString, " != ", actualType.toString);
-				writeln(n.children[0].begin, " ", n.end);
+				errors ~= "Declared and actual type of function don't match: "
+					~ declaredType.toString ~ " != " ~ actualType.toString ~ "\n"
+					~ to!string(n.children[0].begin) ~ " " ~ to!string(n.end);
 				type = Type("error");
 			} else {
 				type = declaredType;
 			}
 			break;
-		/*case "D.Decl":
+
+		case "D.Decl":
 			type = Type("void");
-			break;*/
+			break;
+
 		case "D.Module":
 			type = Type("");
 			break;
+
 		default:
 			if (children.length == 0) {
 				type = Type("void");
@@ -66,7 +91,7 @@ SemantTree typeCheck(ParseTree n) {
 			break;
 	}
 
-	return SemantTree(n.name, successful, type, children, n);
+	return SemantTree(n.name, successful, type, children, n, errors);
 }
 
 Type parseInteger(string s, ushort radix) {
@@ -92,6 +117,7 @@ struct SemantTree {
 	Type type;
 	SemantTree[] children;
 	ParseTree original;
+	string errors;
 
 	string toString(string tabs = "") {
 		string result = name ~ " : " ~ type.toString;

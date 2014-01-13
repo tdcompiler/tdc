@@ -267,7 +267,8 @@ LeadingDecimal <- DecimalInteger
 #	/ (DecimalInteger IntegerSuffix) {decimalIntegerSuffix}
 #	/ (DecimalInteger) {decimalInteger}
 
-IntegerLiteral <- Integer IntegerSuffix?
+IntegerLiteral <- (Integer IntegerSuffix) {integerWithSuffix}
+	/ Integer
 
 Integer <- BinaryInteger
 	/ HexadecimalInteger
