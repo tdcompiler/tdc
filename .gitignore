@@ -1,3 +1,4 @@
 binaries*
 *.swp
 .dub*
+*.userprefs
