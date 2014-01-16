@@ -17,6 +17,7 @@ enum resultParseDir = "../results/parse";
 enum resultSemanticDir = "../results/semantic";
 
 struct Work {
+	string pathSource;
 	ParseTree parse;
 	string pathParse;
 	SemantTree semant;
@@ -99,7 +100,7 @@ auto semantic(ref Work w, ref string[] errors, bool forceOutput = false) {
 	auto resultParsePath = w.pathSemant;
 
 	if (!tree.successful) {
-		errors ~= tree.name ~ "\n" ~ treeText ~ "\n"
+		errors ~= w.pathSource ~ "\n" ~ tree.name ~ "\n" ~ treeText ~ "\n"
 			~ tree.errors ~ "\n";
 	}
 
@@ -191,6 +192,7 @@ auto parse(string name, ref string[] errors, bool forceOutput = false) {
 	file = file.replaceAll!(a => "\n")(regex(r"\r\n"));
 	auto tree = D(file);
 	Work w;
+	w.pathSource = name;
 	w.parse = tree;
 	w.pathParse = resultParseDir;
 	w.pathSemant = resultSemanticPath;

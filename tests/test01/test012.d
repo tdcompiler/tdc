@@ -1,3 +1,5 @@
+// block comment
+
 int main(){
 	/* This is
 	a block comment */

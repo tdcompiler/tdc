@@ -1,5 +1,7 @@
 // integer literal suffix
 
-int main(){
+void main() {}
+
+ulong foo(){
 	return 0Lu;
 }

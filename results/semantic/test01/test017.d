@@ -4,14 +4,14 @@ D :
        +-D.DeclDef : void
           +-D.Declaration : void
              +-D.Decl : void
-                +-D.basicFunction : error
+                +-D.basicFunction : int
                    +-D.BasicType : int
                    |  +-D.BasicTypeX : int
                    +-D.Declarator : void
                    |  +-D.Identifier : void
-                   +-D.FunctionBody : void
-                      +-D.BlockStatement : void
-                         +-D.StatementList : void
+                   +-D.FunctionBody : int
+                      +-D.BlockStatement : int
+                         +-D.StatementList : int
                             +-D.Statement : void
                             |  +-D.NonEmptyStatement : void
                             |     +-D.NonEmptyStatementNoCaseNoDefault : void

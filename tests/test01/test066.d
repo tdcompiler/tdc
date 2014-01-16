@@ -1,5 +1,3 @@
-// temp
+// Empty
 
-void derp() {}
-
-void main(char * lala) {}
+void main() {}

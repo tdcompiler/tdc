@@ -4,4 +4,6 @@
 void main() {
 }
 
-long foo() {}
+long foo() {
+	return 2L;
+}

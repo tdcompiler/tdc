@@ -14,7 +14,7 @@ D :
        +-D.DeclDef : void
        |  +-D.Declaration : void
        |     +-D.Decl : void
-       |        +-D.basicFunction : error
+       |        +-D.basicFunction : long
        |           +-D.BasicType : long
        |           |  +-D.BasicTypeX : long
        |           +-D.Declarator : void

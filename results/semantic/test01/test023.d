@@ -2,11 +2,21 @@ D :
  +-D.Module : 
     +-D.DeclDefs : void
        +-D.DeclDef : void
+       |  +-D.Declaration : void
+       |     +-D.Decl : void
+       |        +-D.basicFunction : void
+       |           +-D.BasicType : void
+       |           |  +-D.BasicTypeX : void
+       |           +-D.Declarator : void
+       |           |  +-D.Identifier : void
+       |           +-D.FunctionBody : void
+       |              +-D.BlockStatement : void
+       +-D.DeclDef : void
           +-D.Declaration : void
              +-D.Decl : void
-                +-D.basicFunction : error
-                   +-D.BasicType : int
-                   |  +-D.BasicTypeX : int
+                +-D.basicFunction : ulong
+                   +-D.BasicType : ulong
+                   |  +-D.BasicTypeX : ulong
                    +-D.Declarator : void
                    |  +-D.Identifier : void
                    +-D.FunctionBody : ulong

@@ -60,10 +60,30 @@ SemantTree typeCheck(ParseTree n) {
 			}
 			break;
 
+		case "D.StatementList":
+			Type[] types;
+			foreach (child; children) {
+				if (child.dfs("D.ReturnStatement")) types ~= child.type;
+			}
+			if (types.length == 0) type = Type("void");
+			else {
+				type = types[0];
+				foreach (t; types) {
+					if (t != type) {
+						errors ~= "Return statements are different types: "
+							~ type.toString ~ " != " ~ t.toString ~ "\n"
+							~ to!string(n.children[0].begin) ~ " " ~ to!string(n.end);
+						type = Type("error");
+						break;
+					}
+				}
+			}
+			break;
+
 		case "D.basicFunction":
 			Type declaredType = children[0].type;
 			Type actualType = children[2].type;
-			if (declaredType != actualType) {
+			if (!declaredType.equalType(actualType)) {
 				successful = false;
 				errors ~= "Declared and actual type of function don't match: "
 					~ declaredType.toString ~ " != " ~ actualType.toString ~ "\n"
@@ -92,6 +112,18 @@ SemantTree typeCheck(ParseTree n) {
 	}
 
 	return SemantTree(n.name, successful, type, children, n, errors);
+}
+
+bool equalType(Type t1, Type t2) {
+	if (t1.name == t2.name) return true;
+	if (t1.name == "long" && t2.name == "int") return true;
+	return false;
+}
+
+bool dfs(SemantTree n, string s) {
+	if (n.name == s) return true;
+	foreach (child; n.children) if (child.dfs(s)) return true;
+	return false;
 }
 
 Type parseInteger(string s, ushort radix) {
@@ -135,36 +167,4 @@ struct SemantTree {
 T derp(T)(T t) {
 	t.name = "D.lala";
 	return t;
-	//return t.children ~= ParseTree("testing");
 }
-
-/*string typeCheck(in ParseTree n) {
-	switch (n.name) {
-		case "D": return typeCheck(n.children[0]);
-		case "D.Module": return typeCheck(n.children[0]);
-		case "D.DeclDef": {
-			if (isFunction(n)) {
-				return "Definitely a function";
-			} else {
-				return "No idea what this is";
-			}
-		}
-		default: string result = "";
-				 foreach (const c; n.children) result ~= c.typeCheck();
-				 return result;
-	}
-}*/
-
-//struct Node {
-//	bool immutable_, const_, 
-//}
-
-
-
-/*bool isFunction(in ParseTree n) {
-	foreach (c; n.children) c.name.writeln;
-	foreach (c; n.children) {
-		if (c.name == "D.FunctionBody") return true;
-	}
-	return false;
-}*/
