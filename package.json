@@ -1,8 +1,8 @@
 {
-	"name": "ourdcompiler",
-	"description": "An example project skeleton",
-	"homepage": "http://github.com/bakkegaard/OurDCompiler",
-	"copyright": "Copyright © 2000, Your Name",
+	"name": "TenaciousDCompiler",
+	"description": "A compiler for D, written in D",
+	"homepage": "http://github.com/bakkegaard/tdc",
+	"copyright": "Copyright © 2000, Casper Færgemand & Nick Bakkegaard",
 	"authors": [
 		"Nick Bakkegaard",
 		"Casper Færgemand"
